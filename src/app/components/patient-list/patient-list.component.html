@@ -1,0 +1,17 @@
+<mat-list>
+  <mat-list-item *ngFor="let patient of patients()">
+    <h3 matListItemTitle>
+      {{patient.id + "- " + patient.prenom + " " + patient.nom }}
+    </h3>
+    <p matListItemLine>
+      {{ patient.dateNaissance }}
+    </p>
+    <button
+      matListItemMeta
+      mat-icon-button
+      (click)="patientContactService.deletePatient(patient.id)"
+    >
+      <mat-icon >delete</mat-icon>
+    </button>
+  </mat-list-item>
+</mat-list>
