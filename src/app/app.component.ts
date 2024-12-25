@@ -7,6 +7,7 @@ import {CommonModule} from '@angular/common';
 import {MatToolbarModule} from '@angular/material/toolbar';
 import {MatButtonModule} from '@angular/material/button';
 import {LoaderService} from './services/loader.service';
+import {MatNativeDateModule} from '@angular/material/core';
 
 @Component({
   selector: 'app-root',
@@ -18,7 +19,8 @@ import {LoaderService} from './services/loader.service';
     MatIconModule,
     RouterModule,
     MatProgressSpinnerModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatNativeDateModule
   ],
   standalone: true,
   templateUrl: './app.component.html',

@@ -3,6 +3,8 @@ import {map, tap} from 'rxjs';
 import {ResourceService} from './resource.service';
 import {IApiResponse} from '../models/api-response';
 import {IPatientResponse} from '../models/patient-response.model';
+import {IPatientRequest} from '../models/patient-request.model';
+import {IPatientWithContactResponse} from '../models/patient-with-contact-response.model';
 let baseUrl = "http://localhost:8084/api/v1/patients"
 
 @Injectable({
@@ -19,5 +21,13 @@ export class PatientService extends ResourceService<IPatientResponse>{
       );
   }
 
+  addPatient(patient: IPatientRequest) {
+    return this.http
+      .post<IApiResponse>(baseUrl, patient)
+      .pipe(
+        map((response) => response.data as IPatientWithContactResponse[]),
+        tap(this.setResources.bind(this))
+      );
+  }
 
 }

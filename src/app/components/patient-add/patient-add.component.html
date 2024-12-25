@@ -1,1 +1,107 @@
-<p>patient-add works!</p>
+<div class="container">
+  <form [formGroup]="patientForm" (ngSubmit)="onSubmit()" class="patient-form">
+    <h3 class="text-center mb-5">Créer un patient</h3>
+    <div class="row">
+      <div class="col">
+        <mat-form-field appearance="fill">
+          <mat-label>Nom</mat-label>
+          <input matInput placeholder="Nom" formControlName="nom">
+        </mat-form-field>
+        <div *ngIf="patientForm.get('nom')?.invalid && (patientForm.get('nom')?.dirty || patientForm.get('nom')?.touched)">
+          <span *ngIf="f['nom'].getError('required')" class="text-danger">Ce champ est requis.</span>
+        </div>
+      </div>
+
+      <div class="col">
+        <mat-form-field appearance="fill">
+          <mat-label>Prénom</mat-label>
+          <input matInput placeholder="Prénom" formControlName="prenom">
+        </mat-form-field>
+        <div *ngIf="patientForm.get('prenom')?.invalid && (patientForm.get('prenom')?.dirty || patientForm.get('prenom')?.touched)">
+          <span *ngIf="f['prenom'].getError('required')" class="text-danger">Ce champ est requis.</span>
+        </div>
+      </div>
+
+      <div class="col">
+        <mat-form-field appearance="fill">
+          <mat-label>Sexe</mat-label>
+          <mat-select formControlName="sexe">
+            <mat-option value="HOMME">Homme</mat-option>
+            <mat-option value="FEMME">Femme</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <div *ngIf="patientForm.get('sexe')?.invalid && (patientForm.get('sexe')?.dirty || patientForm.get('sexe')?.touched)">
+          <span *ngIf="f['sexe'].getError('required')" class="text-danger">Ce champ est requis.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <mat-form-field appearance="fill">
+          <mat-label>Date de naissance</mat-label>
+          <input matInput formControlName="dateNaissance" [matDatepicker]="picker" />
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+      </div>
+      <div class="col">
+        <mat-form-field appearance="fill">
+          <mat-label>Taille en cm</mat-label>
+          <input matInput formControlName="taille" type="number" />
+        </mat-form-field>
+        <div *ngIf="patientForm.get('taille')?.invalid && (patientForm.get('taille')?.dirty || patientForm.get('taille')?.touched)">
+          <span *ngIf="f['taille'].getError('required')" class="text-danger">Ce champ est requis.</span>
+        </div>
+      </div>
+      <div class="col">
+        <mat-form-field appearance="fill">
+          <mat-label>Poids en kg</mat-label>
+          <input matInput formControlName="poids" type="number" />
+        </mat-form-field>
+        <div *ngIf="patientForm.get('poids')?.invalid && (patientForm.get('poids')?.dirty || patientForm.get('poids')?.touched)">
+          <span *ngIf="f['poids'].getError('required')" class="text-danger">Ce champ est requis.</span>
+        </div>
+      </div>
+    </div>
+
+    <div formArrayName="contacts" class="contact-list mt-4">
+          <h5>Contacts</h5>
+          <div *ngFor="let contact of contacts.controls; let i = index" [formGroupName]="i" class="contact-item">
+            <div class="row">
+              <div class="col">
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-label>Type de contact</mat-label>
+                  <mat-select formControlName="type">
+                    <mat-option value="EMAIL">Email</mat-option>
+                    <mat-option value="MOBILE">Mobile</mat-option>
+                    <mat-option value="FIXE">Fixe</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <div *ngIf="contact.get('type')?.invalid && (contact.get('type')?.dirty || contact.get('type')?.touched)">
+                  <span *ngIf="contact.get('type')?.hasError('required')" class="text-danger">Ce champ est requis.</span>
+                </div>
+              </div>
+              <div class="col">
+                <mat-form-field appearance="fill">
+                  <mat-label>Valeur</mat-label>
+                  <input matInput formControlName="contact" />
+                </mat-form-field>
+                <div *ngIf="contact.get('contact')?.invalid && (contact.get('contact')?.dirty || contact.get('contact')?.touched)">
+                  <span *ngIf="contact.get('contact')?.hasError('required')" class="text-danger">Ce champ est requis.</span>
+                </div>
+              </div>
+              <div class="col-1">
+                <button mat-icon-button color="warn" (click)="removeContact(i)" *ngIf="i>0">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+          <button mat-stroked-button color="primary" (click)="addContact()">Ajouter un contact</button>
+        </div>
+    <div class="mt-5 text-end">
+      <button mat-raised-button color="primary" type="submit">Enregistrer</button>
+    </div>
+  </form>
+</div>
