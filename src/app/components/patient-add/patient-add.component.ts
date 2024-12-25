@@ -82,7 +82,6 @@ export class PatientAddComponent {
       console.log('Formulaire soumis', this.patientForm.value);
       this.patientService.addPatient(this.patientForm.value).subscribe({
         next: (data: any) => {
-          console.log(data)
           this.router.navigateByUrl('/').then((response: any) => {
             this.router.navigateByUrl("/")
           })

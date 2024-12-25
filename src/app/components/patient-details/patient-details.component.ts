@@ -3,10 +3,11 @@ import {CommonModule} from '@angular/common';
 import {MatCardModule} from '@angular/material/card';
 import {MatListModule} from '@angular/material/list';
 import {MatIcon} from '@angular/material/icon';
-import {ActivatedRoute} from '@angular/router';
+import {ActivatedRoute, Router} from '@angular/router';
 import {PatientService} from '../../services/patient.service';
 import {IApiResponse} from '../../models/api-response';
 import {IPatientWithContactResponse} from '../../models/patient-with-contact-response.model';
+import {MatButton, MatIconButton} from '@angular/material/button';
 
 @Component({
   selector: 'app-patient-details',
@@ -14,7 +15,9 @@ import {IPatientWithContactResponse} from '../../models/patient-with-contact-res
     CommonModule,
     MatCardModule,
     MatListModule,
-    MatIcon
+    MatIcon,
+    MatIconButton,
+    MatButton
   ],
   standalone: true,
   templateUrl: './patient-details.component.html',
@@ -22,6 +25,7 @@ import {IPatientWithContactResponse} from '../../models/patient-with-contact-res
 })
 export class PatientDetailsComponent implements OnInit{
   route = inject(ActivatedRoute)
+  router = inject(Router)
   patientService = inject(PatientService);
   id: string|null = ""
   patient: IPatientWithContactResponse|null = null
@@ -52,5 +56,11 @@ export class PatientDetailsComponent implements OnInit{
       default:
         return 'contact_phone';
     }
+  }
+
+  modifierContact(id: string){
+    this.router.navigateByUrl('/').then((response: any) => {
+      this.router.navigateByUrl("/patients/edit/"+id)
+    })
   }
 }
