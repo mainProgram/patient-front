@@ -40,4 +40,13 @@ export class PatientService extends ResourceService<IPatientResponse>{
       .delete<IApiResponse>(`${baseUrl}/${id}`)
       .pipe(tap(() => this.removeResource(id)));
   }
+
+  updatePatient(id:string, patient: IPatientRequest) {
+    return this.http
+      .put<IApiResponse>(`${baseUrl}/${id}`, patient)
+      .pipe(
+        map((response) => response.data as IPatientWithContactResponse[]),
+        tap(this.setResources.bind(this))
+      );
+  }
 }

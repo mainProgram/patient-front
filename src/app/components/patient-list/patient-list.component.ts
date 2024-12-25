@@ -5,7 +5,6 @@ import {MatIconModule} from '@angular/material/icon';
 import {CommonModule} from '@angular/common';
 import {MatListModule} from '@angular/material/list';
 import {MatButtonModule} from '@angular/material/button';
-import {PatientContactService} from '../../services/patient.contact.service';
 import {Router} from '@angular/router';
 import Swal from 'sweetalert2';
 
@@ -19,7 +18,6 @@ import Swal from 'sweetalert2';
 export class PatientListComponent {
   router = inject(Router);
   patientService = inject(PatientService);
-  patientContactService = inject(PatientContactService);
 
   constructor() {
     this.patientService.fetchPatients().pipe(take(1)).subscribe();

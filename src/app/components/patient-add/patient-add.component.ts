@@ -79,11 +79,10 @@ export class PatientAddComponent {
 
   onSubmit(): void {
     if (this.patientForm.valid) {
-      console.log('Formulaire soumis', this.patientForm.value);
       this.patientService.addPatient(this.patientForm.value).subscribe({
         next: (data: any) => {
           this.router.navigateByUrl('/').then((response: any) => {
-            this.router.navigateByUrl("/")
+            this.router.navigateByUrl("/patients/"+data.id)
           })
         },
         error: (err) => {
