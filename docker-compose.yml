@@ -12,12 +12,12 @@ services:
       - /usr/src/app/node_modules
     command: ["npm", "run", "start", "--", "--host", "0.0.0.0", "--poll=2000"]
 
-  angular-prod:
-    build:
-      context: .
-      target: production
-    ports:
-      - "80:80"
+#  angular-prod:
+#    build:
+#      context: .
+#      target: production
+#    ports:
+#      - "80:80"
 
 networks:
   shared-net:
