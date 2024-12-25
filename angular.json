@@ -34,9 +34,12 @@
             "styles": [
               "@angular/material/prebuilt-themes/rose-red.css",
               "./node_modules/bootstrap/dist/css/bootstrap.css",
+              "./node_modules/sweetalert2/dist/sweetalert2.css",
               "src/styles.sass"
             ],
-            "scripts": []
+            "scripts": [
+              "./node_modules/sweetalert2/dist/sweetalert2.js"
+            ]
           },
           "configurations": {
             "production": {

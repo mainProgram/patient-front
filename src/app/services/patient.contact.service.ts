@@ -22,9 +22,4 @@ export class PatientContactService extends ResourceService<IPatientWithContactRe
       .pipe(tap(this.upsertResource));
   }
 
-  deletePatient(id: string) {
-    return this.http
-      .delete<IPatientWithContactResponse>(`${baseUrl}/${id}`)
-      .pipe(tap(() => this.removeResource(id)));
-  }
 }

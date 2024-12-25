@@ -7,7 +7,6 @@ import {ActivatedRoute} from '@angular/router';
 import {PatientService} from '../../services/patient.service';
 import {IApiResponse} from '../../models/api-response';
 import {IPatientWithContactResponse} from '../../models/patient-with-contact-response.model';
-import {MatLine} from '@angular/material/core';
 
 @Component({
   selector: 'app-patient-details',
@@ -15,8 +14,7 @@ import {MatLine} from '@angular/material/core';
     CommonModule,
     MatCardModule,
     MatListModule,
-    MatIcon,
-    MatLine
+    MatIcon
   ],
   standalone: true,
   templateUrl: './patient-details.component.html',

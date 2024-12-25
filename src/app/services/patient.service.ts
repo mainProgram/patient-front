@@ -35,4 +35,9 @@ export class PatientService extends ResourceService<IPatientResponse>{
       .get<IApiResponse>(baseUrl+ "/"+ id)
   }
 
+  deletePatient(id: string) {
+    return this.http
+      .delete<IApiResponse>(`${baseUrl}/${id}`)
+      .pipe(tap(() => this.removeResource(id)));
+  }
 }

@@ -1,15 +1,17 @@
-<mat-list>
-  <mat-list-item *ngFor="let patient of patients()" (click)="seeDetails(patient.id)">
-    <h3 matListItemTitle>
-      {{"Nom complet du patient: " + patient.prenom + " " + patient.nom }}
-    </h3>
-    <p matListItemLine>
-      {{"Sexe: " + patient.sexe }} | {{"Date de naissance: " + patient.dateNaissance }}
-    </p>
+<mat-list *ngIf="patients() && patients().length> 0">
+  <mat-list-item *ngFor="let patient of patients()">
+    <div (click)="seeDetails(patient.id)">
+      <h3 matListItemTitle>
+        {{"Nom complet du patient: " + patient.prenom + " " + patient.nom }}
+      </h3>
+      <p matListItemLine>
+        {{"Sexe: " + patient.sexe }} | {{"Date de naissance: " + patient.dateNaissance }}
+      </p>
+    </div>
     <button
       matListItemMeta
       mat-icon-button
-      (click)="patientContactService.deletePatient(patient.id)"
+      (click)="deletePatient(patient.id)"
     >
       <mat-icon >delete</mat-icon>
     </button>
