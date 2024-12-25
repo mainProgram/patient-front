@@ -6,6 +6,7 @@ import {CommonModule} from '@angular/common';
 import {MatListModule} from '@angular/material/list';
 import {MatButtonModule} from '@angular/material/button';
 import {PatientContactService} from '../../services/patient.contact.service';
+import {Router} from '@angular/router';
 
 @Component({
   selector: 'app-patient-list',
@@ -15,6 +16,7 @@ import {PatientContactService} from '../../services/patient.contact.service';
   styleUrl: './patient-list.component.sass'
 })
 export class PatientListComponent {
+  router = inject(Router);
   patientService = inject(PatientService);
   patientContactService = inject(PatientContactService);
 
@@ -24,5 +26,11 @@ export class PatientListComponent {
 
   get patients() {
     return this.patientService.resources;
+  }
+
+  seeDetails(id: string){
+    this.router.navigateByUrl('/').then((response: any) => {
+      this.router.navigateByUrl("/patients/"+id)
+    })
   }
 }

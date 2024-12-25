@@ -1,10 +1,10 @@
 <mat-list>
-  <mat-list-item *ngFor="let patient of patients()">
+  <mat-list-item *ngFor="let patient of patients()" (click)="seeDetails(patient.id)">
     <h3 matListItemTitle>
-      {{patient.id + "- " + patient.prenom + " " + patient.nom }}
+      {{"Nom complet du patient: " + patient.prenom + " " + patient.nom }}
     </h3>
     <p matListItemLine>
-      {{ patient.dateNaissance }}
+      {{"Sexe: " + patient.sexe }} | {{"Date de naissance: " + patient.dateNaissance }}
     </p>
     <button
       matListItemMeta

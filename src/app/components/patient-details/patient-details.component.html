@@ -1,7 +1,32 @@
-<p>patient-details works!</p>
-<p>patient-details works!</p>
-<p>patient-details works!</p>
-<p>patient-details works!</p>
-<p>patient-details works!</p>
-<p>patient-details works!</p>
-<p>patient-details works!</p>
+<ng-container *ngIf="patient!=null">
+  <div class="container my-5">
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-8 col-lg-6">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>{{ patient.prenom }} {{ patient.nom }}</mat-card-title>
+            <mat-card-subtitle>{{ patient.sexe }}</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="my-3">
+              <p>Date de naissance : {{ patient.dateNaissance }}</p>
+              <p>Taille : {{ patient.taille }} cm</p>
+              <p>Poids : {{ patient.poids }} kg</p>
+            </div>
+            <div class="my-3">
+              <h3>Contacts</h3>
+              <mat-list>
+                <mat-list-item *ngFor="let contact of patient.contacts">
+                  <div class="d-flex align-items-center">
+                    <mat-icon mat-list-icon>{{ getContactIcon(contact.type) }}</mat-icon>
+                    <div>{{ contact.type }} - {{ contact.contact }}</div>
+                  </div>
+                </mat-list-item>
+              </mat-list>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+  </div>
+</ng-container>

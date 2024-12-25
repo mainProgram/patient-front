@@ -97,5 +97,4 @@ export class PatientAddComponent {
   }
 
   public get f(){  return this.patientForm.controls }
-
 }

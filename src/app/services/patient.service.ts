@@ -30,4 +30,9 @@ export class PatientService extends ResourceService<IPatientResponse>{
       );
   }
 
+  getPatient(id: string) {
+    return this.http
+      .get<IApiResponse>(baseUrl+ "/"+ id)
+  }
+
 }
