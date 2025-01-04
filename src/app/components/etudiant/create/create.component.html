@@ -1,1 +1,55 @@
-<p>create works!</p>
+<div class="container">
+    <form [formGroup]="etudiantForm" (ngSubmit)="onSubmit()" class="etudiant-form">
+        <h3 class="text-center my-5">
+            Créer un etudiant
+            <button mat-icon-button routerLink="/">
+                <mat-icon>list</mat-icon>
+            </button>
+        </h3>
+            <mat-form-field appearance="fill">
+                <mat-label>Nom</mat-label>
+                <input matInput placeholder="Nom" formControlName="nom">
+            </mat-form-field>
+            <div *ngIf="etudiantForm.get('nom')?.invalid && (etudiantForm.get('nom')?.dirty || etudiantForm.get('nom')?.touched)">
+                <span *ngIf="f['nom'].getError('required')" class="text-danger">Ce champ est requis.</span>
+            </div>
+
+            <mat-form-field appearance="fill">
+                <mat-label>Prénom</mat-label>
+                <input matInput placeholder="Prénom" formControlName="prenom">
+            </mat-form-field>
+            <div *ngIf="etudiantForm.get('prenom')?.invalid && (etudiantForm.get('prenom')?.dirty || etudiantForm.get('prenom')?.touched)">
+                <span *ngIf="f['prenom'].getError('required')" class="text-danger">Ce champ est requis.</span>
+            </div>
+
+            <mat-form-field appearance="fill">
+                <mat-label>Matricule</mat-label>
+                <input matInput formControlName="matricule" type="number" />
+            </mat-form-field>
+            <div *ngIf="etudiantForm.get('matricule')?.invalid && (etudiantForm.get('matricule')?.dirty || etudiantForm.get('matricule')?.touched)">
+                <span *ngIf="f['matricule'].getError('required')" class="text-danger">Ce champ est requis.</span>
+            </div>
+
+            <mat-form-field appearance="fill">
+                <mat-label>Date de naissance</mat-label>
+                <input matInput formControlName="dateNaissance" [matDatepicker]="picker" />
+                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+            </mat-form-field>
+
+            <mat-form-field appearance="fill">
+                <mat-label>Sexe</mat-label>
+                <mat-select formControlName="sexe">
+                    <mat-option value="HOMME">Homme</mat-option>
+                    <mat-option value="FEMME">Femme</mat-option>
+                </mat-select>
+            </mat-form-field>
+            <div *ngIf="etudiantForm.get('sexe')?.invalid && (etudiantForm.get('sexe')?.dirty || etudiantForm.get('sexe')?.touched)">
+                <span *ngIf="f['sexe'].getError('required')" class="text-danger">Ce champ est requis.</span>
+            </div>
+
+        <div class="mt-5 text-end">
+            <button mat-raised-button color="primary" type="submit">Enregistrer</button>
+        </div>
+    </form>
+</div>

@@ -29,18 +29,18 @@ export class EtudiantService extends ResourceService<IEtudiantResponse>{
       );
   }
 
-  getEtudiant(id: string) {
+  getEtudiant(id: number) {
     return this.http
       .get<IApiResponse>(baseUrl+ "/"+ id)
   }
 
-  deleteEtudiant(id: string) {
+  deleteEtudiant(id: number) {
     return this.http
       .delete<IApiResponse>(`${baseUrl}/${id}`)
       .pipe(tap(() => this.removeResource(id)));
   }
 
-  updateEtudiant(id:string, etudiant: IEtudiantRequest) {
+  updateEtudiant(id:number, etudiant: IEtudiantRequest) {
     return this.http
       .put<IApiResponse>(`${baseUrl}/${id}`, etudiant)
       .pipe(
