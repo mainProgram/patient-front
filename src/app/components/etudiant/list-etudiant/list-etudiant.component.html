@@ -1,0 +1,27 @@
+<mat-list *ngIf="etudiants() && etudiants().length> 0">
+    <mat-list-item><h3 class="mt-3">Liste des Etudiants</h3></mat-list-item>
+    <mat-list-item *ngFor="let etudiant of etudiants()">
+        <div (click)="seeDetails(etudiant.id)">
+            <h3 matListItemTitle>
+                {{"Nom complet du etudiant: " + etudiant.prenom + " " + etudiant.nom }}
+            </h3>
+            <p matListItemLine>
+                {{"Sexe: " + etudiant.sexe }} | {{"Date de naissance: " + etudiant.dateNaissance }}
+            </p>
+        </div>
+        <button
+                matListItemMeta
+                mat-icon-button
+                (click)="modifierEtudiant(etudiant.id)"
+        >
+            <mat-icon >edit</mat-icon>
+        </button>
+        <button
+                matListItemMeta
+                mat-icon-button
+                (click)="deleteEtudiant(etudiant.id)"
+        >
+            <mat-icon >delete</mat-icon>
+        </button>
+    </mat-list-item>
+</mat-list>

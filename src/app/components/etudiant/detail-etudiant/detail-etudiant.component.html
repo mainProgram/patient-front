@@ -1,0 +1,23 @@
+<ng-container *ngIf="etudiant!=null">
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 col-lg-6">
+                <mat-card>
+                    <mat-card-header>
+                        <mat-card-title>{{ etudiant.prenom }} {{ etudiant.nom }}</mat-card-title>
+                        <mat-card-subtitle>{{ etudiant.sexe }}</mat-card-subtitle>
+                    </mat-card-header>
+                    <mat-card-content>
+                        <div class="my-3">
+                            <p>Matricule : {{ etudiant.matricule }}</p>
+                            <p>Date de naissance : {{ etudiant.dateNaissance }}</p>
+                        </div>
+                        <div class="text-end">
+                            <button mat-stroked-button color="primary" (click)="modifier(etudiant.id)">Modifier</button>
+                        </div>
+                    </mat-card-content>
+                </mat-card>
+            </div>
+        </div>
+    </div>
+</ng-container>
