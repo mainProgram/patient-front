@@ -6,3 +6,63 @@ mat-progress-spinner
   top: 50%
   left: 50%
   transform: translate(-50%, -50%)
+
+.toolbar
+  display: flex
+  justify-content: space-between
+  align-items: center
+
+
+nav a
+  text-decoration: none
+  font-weight: bold
+  color: black
+  margin: 0 10px
+  transition: color 0.3s
+
+nav a:hover
+  color: #d36fe7
+
+
+.active-link
+  border-bottom: 2px solid #d36fe7
+
+.welcome-container
+  display: flex
+  justify-content: center
+  align-items: center
+  height: calc(100vh - 64px)
+  background-color: #f5f5f5
+
+
+mat-card
+  width: 600px
+  text-align: center
+  animation: slideIn 1.5s ease-out
+
+@keyframes slideIn
+  from
+    opacity: 0
+    transform: translateX(-100px)
+
+  to
+    opacity: 1
+    transform: translateX(0)
+
+
+@keyframes fadeIn
+  from
+    opacity: 0
+    transform: translateY(20px)
+
+  to
+    opacity: 1
+    transform: translateY(0)
+
+
+.center-title
+  text-align: center
+  width: 100%
+  display: block
+  font-size: 40px
+  font-weight: bold

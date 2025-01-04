@@ -3,23 +3,27 @@ import {PatientListComponent} from './components/patient-list/patient-list.compo
 import {PatientAddComponent} from './components/patient-add/patient-add.component';
 import {PatientDetailsComponent} from './components/patient-details/patient-details.component';
 import {PatientUpdateComponent} from './components/patient-update/patient-update.component';
+import {CreateComponent} from './components/etudiant/create/create.component';
 
 export const routes: Routes = [
   {
-    path: '',
+    path: 'etudiants',
     pathMatch: 'full',
-    component: PatientListComponent,
+    component: CreateComponent,
   },
   {
-    path: 'add',
-    component: PatientAddComponent,
+    path: 'professeurs',
+    pathMatch: 'full',
+    component: CreateComponent,
   },
   {
-    path: 'patients/:id',
-    component: PatientDetailsComponent,
+    path: 'matieres',
+    pathMatch: 'full',
+    component: CreateComponent,
   },
   {
-    path: 'patients/edit/:id',
-    component: PatientUpdateComponent,
+    path: 'classes',
+    pathMatch: 'full',
+    component: CreateComponent,
   },
 ];

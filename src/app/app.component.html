@@ -1,16 +1,28 @@
-<mat-toolbar color="primary">Patients
-  <div>
-    <button mat-icon-button routerLink="/">
-      <mat-icon>list</mat-icon>
-    </button>
-    <button mat-icon-button routerLink="/add">
-      <mat-icon>add_circle</mat-icon>
-    </button>
-  </div>
+<mat-toolbar color="primary">
+    <span>School-App</span>
+    <span class="spacer"></span>
+    <nav>
+        <a mat-button routerLink="/etudiants" routerLinkActive="active-link">Étudiants</a>
+        <a mat-button routerLink="/professeurs" routerLinkActive="active-link">Professeurs</a>
+        <a mat-button routerLink="/classes" routerLinkActive="active-link">Classes</a>
+        <a mat-button routerLink="/matieres" routerLinkActive="active-link">Matières</a>
+    </nav>
 </mat-toolbar>
 
 <router-outlet></router-outlet>
 
+<div class="welcome-container" *ngIf="isHomePage()">
+    <mat-card>
+        <mat-card-header class="center-title">
+            <mat-card-title>Bienvenue sur School-App</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+            <p>
+                Explorez le menu pour gérer vos étudiants, professeurs, classes et matières. Nous sommes là pour simplifier votre travail !
+            </p>
+        </mat-card-content>
+    </mat-card>
+</div>
 <mat-progress-spinner
   mode="indeterminate"
   *ngIf="loading()"
