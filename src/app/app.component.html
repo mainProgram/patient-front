@@ -1,12 +1,20 @@
-<mat-toolbar color="primary">Patients
-  <div>
-    <button mat-icon-button routerLink="/">
-      <mat-icon>list</mat-icon>
-    </button>
-    <button mat-icon-button routerLink="/add">
-      <mat-icon>add_circle</mat-icon>
-    </button>
+<mat-toolbar color="primary"  *ngIf="isLoggedIn$ | async">
+  <div class="d-flex justify-content-between align-items-center">
+    <h4>Patients</h4>
+    <div>
+      <button mat-icon-button routerLink="/patients">
+        <mat-icon>list</mat-icon>
+      </button>
+      <button mat-icon-button routerLink="/patients/add">
+        <mat-icon>add_circle</mat-icon>
+      </button>
+
+    </div>
   </div>
+  <button mat-raised-button color="primary" type="submit" (click)="logout()">
+    <mat-icon>logout</mat-icon>
+    Déconnexion
+  </button>
 </mat-toolbar>
 
 <router-outlet></router-outlet>

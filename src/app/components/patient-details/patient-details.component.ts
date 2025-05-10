@@ -7,7 +7,7 @@ import {ActivatedRoute, Router} from '@angular/router';
 import {PatientService} from '../../services/patient.service';
 import {IApiResponse} from '../../models/api-response';
 import {IPatientWithContactResponse} from '../../models/patient-with-contact-response.model';
-import {MatButton, MatIconButton} from '@angular/material/button';
+import {MatButton} from '@angular/material/button';
 
 @Component({
   selector: 'app-patient-details',
@@ -16,7 +16,6 @@ import {MatButton, MatIconButton} from '@angular/material/button';
     MatCardModule,
     MatListModule,
     MatIcon,
-    MatIconButton,
     MatButton
   ],
   standalone: true,
