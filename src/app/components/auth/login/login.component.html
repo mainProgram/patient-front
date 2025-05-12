@@ -7,13 +7,13 @@
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
         <mat-form-field appearance="fill">
           <mat-label>Email</mat-label>
-          <input matInput formControlName="username">
+          <input matInput formControlName="username" name="username">
           <mat-error *ngIf="loginForm.get('username')?.invalid">Email invalide</mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Mot de passe</mat-label>
-          <input matInput formControlName="password" type="password">
+          <input matInput formControlName="password"  name="password" type="password">
           <mat-error *ngIf="loginForm.get('password')?.invalid">Mot de passe requis</mat-error>
         </mat-form-field>
 
