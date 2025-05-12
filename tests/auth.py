@@ -35,7 +35,7 @@ try:
     # Exemple : vérifier redirection ou affichage d'un message
     #assert "dashboard" in driver.current_url.lower() or "welcome" in driver.page_source.lower()
 
-    print("✅ Test passed: Login successful or expected page loaded.")
+    print("✅ Test passed : Login successful or expected page loaded.")
 
 
 
