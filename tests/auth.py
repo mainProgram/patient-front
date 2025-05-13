@@ -22,6 +22,7 @@ try:
     # Aller à la page du formulaire de login Angular
     print("🚀 Ouverture de la page")
     driver.get("http://localhost:4200/")
+    print("Page source snapshot:\n", driver.page_source[:1000])
     time.sleep(5)  # Attendre le chargement
 
     # Trouver les champs
