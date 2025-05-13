@@ -50,7 +50,7 @@ try:
     submit_button.click()
 
     # Attente du résultat
-    #time.sleep(10)
+    time.sleep(10)
 
     print("🚀 sending logout ")
     logout_button = wait.until(EC.element_to_be_clickable((By.ID, "logout")))
