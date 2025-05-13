@@ -17,7 +17,11 @@ pipeline {
     stage('Install dependencies') {
       steps {
         dir('patient-front') {
-          sh 'npm install'
+          sh '''
+            npm install
+            pip install selenium
+
+          '''
         }
       }
     }
