@@ -41,7 +41,8 @@ pipeline {
 
     stage('Run Selenium Python Test') {
       steps {
-        sh 'xvfb-run ${PYTHONPATH} selenium_login_test.py'
+        sh 'ls'
+        sh 'xvfb-run ${PYTHONPATH} tests/auth.py'
       }
     }
 
