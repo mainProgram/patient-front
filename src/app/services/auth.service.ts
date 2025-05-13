@@ -16,7 +16,8 @@ export class AuthService {
     private router: Router
   ) {}
 
-  login(credentials: {email: string, password: string}): Observable<any> {
+  //login(credentials: {email: string, password: string}): Observable<any> {
+  login(credentials: {username: string, password: string}): Observable<any> {
     //return this.http.post<any>('http://localhost:8084/api/auth/signin', credentials)
     return this.http.post<any>('https://6fdd-41-214-40-111.ngrok-free.app/api/auth/signin', credentials)
       .pipe(
