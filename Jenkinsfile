@@ -19,8 +19,6 @@ pipeline {
         dir('patient-front') {
           sh '''
             npm install
-            pip install selenium
-
           '''
         }
       }
