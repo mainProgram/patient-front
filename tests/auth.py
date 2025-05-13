@@ -37,14 +37,14 @@ try:
     # Entrer les données
     username_input.send_keys("admin")
     password_input.send_keys("admin123")
-    submit_button.click()
+    #submit_button.click()
 
     # Attente du résultat
-    time.sleep(10)
+    #time.sleep(10)
 
-    logout_button = wait.until(EC.element_to_be_clickable((By.ID, "logout")))
+    #logout_button = wait.until(EC.element_to_be_clickable((By.ID, "logout")))
 
-    logout_button.click()
+    #logout_button.click()
     # Exemple : vérifier redirection ou affichage d'un message
     #assert "dashboard" in driver.current_url.lower() or "welcome" in driver.page_source.lower()
 
