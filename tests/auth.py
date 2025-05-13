@@ -21,7 +21,8 @@ wait = WebDriverWait(driver, 15)
 try:
     # Aller à la page du formulaire de login Angular
     print("🚀 Ouverture de la page")
-    driver.get("http://localhost:4200/")
+    #driver.get("http://localhost:4200/")
+    driver.get("http://172.17.0.1:4200/")
     print("Page source snapshot:\n", driver.page_source[:1000])
     time.sleep(30)  # Attendre le chargement
 
