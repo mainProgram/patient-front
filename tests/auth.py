@@ -42,7 +42,7 @@ try:
     # Attente du résultat
     time.sleep(10)
 
-    logout_button = driver.find_element(By.ID, "logout")
+    logout_button = wait.until(EC.element_to_be_clickable((By.ID, "logout")))
 
     logout_button.click()
     # Exemple : vérifier redirection ou affichage d'un message
