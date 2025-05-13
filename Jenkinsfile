@@ -24,7 +24,7 @@ pipeline {
     stage('Build Angular app') {
       steps {
         dir('angular-app') {
-          sh 'ng build'
+          sh 'ng build --configuration production'
         }
       }
     }
