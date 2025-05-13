@@ -20,22 +20,28 @@ driver = webdriver.Chrome(options=options, service=ChromeService(ChromeDriverMan
 wait = WebDriverWait(driver, 15)
 try:
     # Aller à la page du formulaire de login Angular
+    print("🚀 Ouverture de la page")
     driver.get("http://localhost:4200/")
     time.sleep(5)  # Attendre le chargement
 
     # Trouver les champs
     #username_input = driver.find_element(By.NAME, "username")
+    print("🚀 gettint username text field")
     username_input = wait.until(EC.element_to_be_clickable((By.NAME, "username")))
     time.sleep(5)
+    print("🚀 getting password text field")
     #password_input = driver.find_element(By.NAME, "password")
     password_input = wait.until(EC.element_to_be_clickable((By.NAME, "password")))
     time.sleep(5)
+    print("🚀 getting button submit")
     #login_button = driver.find_element(By.TAG_NAME, "button")
     submit_button = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
 
 
     # Entrer les données
+    print("🚀 filling with value username text field ")
     username_input.send_keys("admin")
+    print("🚀 filling with value password texte field")
     password_input.send_keys("admin123")
     #submit_button.click()
 
