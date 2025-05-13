@@ -23,7 +23,7 @@ try:
     print("🚀 Ouverture de la page")
     driver.get("http://localhost:4200/")
     print("Page source snapshot:\n", driver.page_source[:1000])
-    time.sleep(5)  # Attendre le chargement
+    time.sleep(30)  # Attendre le chargement
 
     # Trouver les champs
     #username_input = driver.find_element(By.NAME, "username")
