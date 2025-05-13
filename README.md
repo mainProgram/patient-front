@@ -18,3 +18,10 @@ Vous verrez la liste des patients
 
 ![](C:\Users\fazeyna\Pictures\Screenshots\build-2.png)
 ![build-2](https://github.com/user-attachments/assets/32f2e5f8-3182-4183-9aae-6940038ffff3)
+
+
+
+### JENKINS USER 
+
+login : admin
+password: 4612bf9e37a640028db74290adf30b41

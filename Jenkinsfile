@@ -2,51 +2,39 @@ pipeline {
   agent any
 
   environment {
-    CHROMEDRIVER_PATH = "/usr/bin/chromedriver"
-    PYTHONPATH = "/usr/bin/python3"
+    CHROME_BIN = '/usr/bin/google-chrome'
+    CHROMEDRIVER_BIN = '/usr/local/bin/chromedriver'
   }
 
   stages {
-    stage('Install Dependencies') {
+    stage('Clone') {
       steps {
-        sh '''
-          npm install
-          pip install selenium
-        '''
+        git url: 'https://github.com/mainProgram/patient-front.git', branch: 'main'
       }
     }
 
-    stage('Build Angular App') {
+    stage('Install dependencies') {
       steps {
-        sh 'ng build --configuration production'
+        dir('angular-app') {
+          sh 'npm install'
+        }
       }
     }
 
-    stage('Start Angular App') {
+    stage('Build Angular app') {
       steps {
-        // Démarrer un serveur simple en arrière-plan pour servir Angular
-        sh 'nohup npx http-server ./dist/patient-front -p 4200 &'
-        sh 'sleep 5'  // attendre que le serveur démarre
+        dir('angular-app') {
+          sh 'ng build --configuration production'
+        }
       }
     }
 
-    stage('Run Selenium Python Tests') {
+    stage('Run Selenium Login Test') {
       steps {
-        // Utiliser xvfb pour exécuter Chrome headless via selenium
-        sh '''
-          chmod +x ./tests/auth.py
-          xvfb-run ${PYTHONPATH} auth.py
-        '''
+        dir('e2e-tests') {
+          sh 'python3 ./tests/auth.py'
+        }
       }
-    }
-  }
-
-  post {
-    always {
-      echo "🧪 Pipeline terminé (succès ou échec)"
-    }
-    failure {
-      echo "❌ Échec du pipeline : vérifier les logs du test Selenium"
     }
   }
 }
