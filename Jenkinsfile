@@ -15,7 +15,7 @@ pipeline {
 
     stage('Install dependencies') {
       steps {
-        dir('angular-app') {
+        dir('patient-front') {
           sh 'npm install'
         }
       }
@@ -23,7 +23,7 @@ pipeline {
 
     stage('Build Angular app') {
       steps {
-        dir('angular-app') {
+        dir('patient-front') {
           sh 'ng build --configuration production'
         }
       }
@@ -31,7 +31,7 @@ pipeline {
 
     stage('Run Selenium Login Test') {
       steps {
-        dir('angular-app') {
+        dir('patient-front') {
           sh 'python3 tests/auth.py'
         }
       }
