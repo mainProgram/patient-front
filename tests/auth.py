@@ -53,7 +53,7 @@ try:
     time.sleep(10)
 
     print("🚀 sending logout ")
-    logout_button = wait.until(EC.element_to_be_clickable((By.ID, "logout")))
+    logout_button = driver.find_element(By.ID, "logout")
     logout_button.click()
     # Exemple : vérifier redirection ou affichage d'un message
     #assert "dashboard" in driver.current_url.lower() or "welcome" in driver.page_source.lower()
