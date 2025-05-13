@@ -17,7 +17,8 @@ export class AuthService {
   ) {}
 
   login(credentials: {email: string, password: string}): Observable<any> {
-    return this.http.post<any>('http://localhost:8084/api/auth/signin', credentials)
+    //return this.http.post<any>('http://localhost:8084/api/auth/signin', credentials)
+    return this.http.post<any>('http://java:8084/api/auth/signin', credentials)
       .pipe(
         tap(response => {
           localStorage.setItem(this.TOKEN_KEY, response.token);
