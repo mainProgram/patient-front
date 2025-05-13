@@ -32,7 +32,7 @@ pipeline {
     stage('Run Selenium Login Test') {
       steps {
         dir('patient-front') {
-          sh 'python3 ./tests/auth.py'
+          sh 'python3 tests/auth.py'
         }
       }
     }
