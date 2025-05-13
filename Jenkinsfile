@@ -4,6 +4,7 @@ pipeline {
   environment {
     CHROME_BIN = '/usr/bin/google-chrome'
     CHROMEDRIVER_BIN = '/usr/local/bin/chromedriver'
+    PYTHONPATH = "/usr/bin/python3"
   }
 
   stages {
@@ -29,12 +30,25 @@ pipeline {
       }
     }
 
-    stage('Run Selenium Login Test') {
+    stage('Start Angular') {
       steps {
-        dir('patient-front') {
-          sh 'python3 tests/auth.py'
-        }
+        sh 'nohup npx http-server ./dist/patient-front -p 4200 &'
+        sh 'sleep 5'
       }
     }
+
+    stage('Run Selenium Python Test') {
+      steps {
+        sh 'xvfb-run ${PYTHONPATH} selenium_login_test.py'
+      }
+    }
+
+    //stage('Run Selenium Login Test') {
+    //  steps {
+    //    dir('patient-front') {
+    //      sh 'python3 tests/auth.py'
+    //    }
+    //  }
+    //}
   }
 }
