@@ -39,7 +39,14 @@ pipeline {
     stage('Selenium E2E Test') {
       steps {
         sh '''
-          python3 tests/auth.py http://jenkins-frontend:4201 || true
+          # Obtenir l'adresse IP du conteneur Jenkins
+          JENKINS_IP=$(hostname -i)
+
+          # Configurer l'URL pour les tests Selenium en utilisant l'adresse IP
+          export APP_URL="http://$JENKINS_IP:4201"
+
+          # Exécuter le test Selenium
+          python3 tests/auth.py "$APP_URL" || true
         '''
       }
     }
