@@ -1,49 +1,101 @@
-services:
-  jenkins:
-    build:
-      context: .
-      dockerfile: Jenkins.Dockerfile
-    container_name: jenkins-frontend
-    user: root
-    privileged: true
-    ports:
-      - "8087:8080"
-      - "50007:50000"
-    volumes:
-      - jenkins_home_frontend:/var/jenkins_home
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - jenkins-frontend-net
-    restart: unless-stopped
+  pipeline {
+    agent any
 
-  selenium:
-    image: seleniarm/standalone-chromium:latest
-    container_name: selenium
-    shm_size: 2g
-    ports:
-      - "4444:4444"
-      - "7900:7900"  # VNC
-    networks:
-      - jenkins-frontend-net
+    stages {
+    stage('Checkout') {
+    steps {
+    checkout scm
+    }
+    }
 
-  # Ce conteneur utilise votre Dockerfile existant
-  angular-test:
-    build:
-      context: .
-      target: development  # Utilise le target 'development' de votre Dockerfile multi-stage
-    container_name: angular-test
-    ports:
-      - "4201:4200"
-    volumes:
-      - ./:/usr/src/app
-      - /usr/src/app/node_modules
-    networks:
-      - jenkins-frontend-net
-    command: ["tail", "-f", "/dev/null"]
+    stage('Node Version') {
+    steps {
+    sh 'node --version'
+    sh 'npm --version'
+    }
+    }
 
-networks:
-  jenkins-frontend-net:
-    driver: bridge
+    stage('Install Dependencies') {
+    steps {
+    sh 'npm install'
+    }
+    }
 
-volumes:
-  jenkins_home_frontend:
+    stage('Build') {
+    steps {
+    sh 'npm run build'
+    }
+    }
+
+    stage('Verify Build') {
+    steps {
+    sh '''
+    echo "Contenu du répertoire dist:"
+    ls -la ./dist/patient-front/
+
+    echo "Contenu du répertoire browser:"
+    ls -la ./dist/patient-front/browser/
+
+    echo "Vérification de l'index.html:"
+    ls -la ./dist/patient-front/browser/index.html || echo "index.html non trouvé dans browser"
+    '''
+    }
+    }
+
+    stage('Start Angular') {
+    steps {
+    sh '''
+    # Installer http-server si nécessaire
+    npm install -g http-server
+
+    # Démarrer http-server pointant vers le dossier browser
+    http-server ./dist/patient-front/browser -p 4202 -a 0.0.0.0 --cors &
+
+    # Attendre que le serveur démarre
+    sleep 10
+    '''
+    }
+    }
+
+    stage('Check Server') {
+    steps {
+    sh '''
+    # Obtenir l'adresse IP
+    JENKINS_IP=$(hostname -i)
+
+    # Vérifier si le serveur répond
+    curl -v "http://$JENKINS_IP:4202/" || echo "Erreur lors de l'accès au serveur"
+    echo "Server check complete!"
+    '''
+    }
+    }
+
+    stage('Selenium E2E Test') {
+    steps {
+    sh '''
+    # Obtenir l'adresse IP du conteneur Jenkins
+    JENKINS_IP=$(hostname -i)
+
+    # Configurer l'URL pour les tests Selenium
+    export APP_URL="http://$JENKINS_IP:4202"
+
+    # Exécuter le test Selenium
+    python3 tests/auth.py "$APP_URL" || true
+    '''
+    }
+    }
+    }
+
+    post {
+    always {
+    sh 'pkill -f "http-server" || true'
+    deleteDir()
+    }
+    success {
+    echo 'Build réussi!'
+    }
+    failure {
+    echo 'Build échoué!'
+    }
+    }
+  }

@@ -33,6 +33,6 @@ RUN npm run build --prod
 # Stage de production avec Nginx
 FROM nginx:alpine AS production
 
-COPY --from=build /usr/src/app/dist/patient-front /usr/share/nginx/html
+COPY --from=build /usr/src/app/dist/patient-front/browser /usr/share/nginx/html
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
