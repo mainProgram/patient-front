@@ -9,7 +9,7 @@ services:
     ports:
       - "8087:8080"
       - "50007:50000"
-      - "4201:4201"  # Port pour l'application Angular
+      - "4201:4201"
     volumes:
       - jenkins_home_frontend:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
@@ -27,11 +27,10 @@ services:
     networks:
       - jenkins-frontend-net
 
-  # Ce conteneur utilise votre Dockerfile existant
   angular-test:
     build:
       context: .
-      target: development  # Utilise le target 'development' de votre Dockerfile multi-stage
+      target: development
     container_name: angular-test
     ports:
       - "4200:4200"
@@ -42,9 +41,43 @@ services:
       - jenkins-frontend-net
     command: ["tail", "-f", "/dev/null"]
 
+  # Service Backend (patient-api)
+  backend:
+    build:
+      context: https://github.com/mainProgram/patient-api.git
+      dockerfile: Dockerfile
+    container_name: backend-api
+    ports:
+      - "8084:8080"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+    networks:
+      - jenkins-frontend-net
+
+  # Base de données MongoDB
+  mongo:
+    image: mongo:4.4
+    container_name: mongo
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo_db:/data/db
+    networks:
+      - jenkins-frontend-net
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo --host localhost --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
 networks:
   jenkins-frontend-net:
     driver: bridge
 
 volumes:
   jenkins_home_frontend:
+  mongo_db:
