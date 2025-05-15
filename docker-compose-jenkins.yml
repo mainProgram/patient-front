@@ -1,0 +1,68 @@
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins-frontend
+    privileged: true
+    user: root
+    ports:
+      - "8087:8080"
+      - "50007:50000"
+    volumes:
+      - jenkins_home_frontend:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/bin/docker:/usr/bin/docker
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+    networks:
+      - jenkins-frontend-net
+    restart: unless-stopped
+
+  # Solution tout-en-un pour Selenium sur ARM64
+  selenium:
+    image: seleniarm/standalone-chromium:latest
+    container_name: selenium
+    shm_size: 2g
+    ports:
+      - "4444:4444"
+      - "7900:7900"  # VNC
+    networks:
+      - jenkins-frontend-net
+
+  angular-test:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: angular-test
+    ports:
+      - "4201:4200"
+    volumes:
+      - ./:/usr/src/app
+      - /usr/src/app/node_modules
+    networks:
+      - jenkins-frontend-net
+    command: ["tail", "-f", "/dev/null"]
+
+  # Conteneur Python pour les tests Selenium
+  selenium-test:
+    image: python:3.9-slim
+    container_name: selenium-test
+    volumes:
+      - ./tests:/tests
+    working_dir: /tests
+    networks:
+      - jenkins-frontend-net
+    depends_on:
+      - selenium
+      - angular-test
+    command: >
+      /bin/bash -c "
+        pip install selenium webdriver-manager &&
+        tail -f /dev/null
+      "
+
+networks:
+  jenkins-frontend-net:
+    driver: bridge
+
+volumes:
+  jenkins_home_frontend:
