@@ -4,6 +4,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
+import socket
 
 options = Options()
 options.add_argument("--headless")
@@ -16,12 +17,16 @@ driver = webdriver.Remote(
     options=options
 )
 
+# Obtenir l'adresse IP du conteneur Jenkins
+jenkins_ip = socket.gethostbyname('jenkins-frontend')
+app_url = f"http://{jenkins_ip}:4201"
+
 wait = WebDriverWait(driver, 15)
 try:
-    # Utiliser localhost car c'est exécuté depuis Jenkins qui a accès à l'app HTTP servie
-    print("🚀 Ouverture de la page")
-    driver.get("http://jenkins:4201/")
-    time.sleep(5)
+    # Utiliser l'adresse IP du Jenkins container au lieu de localhost
+    print(f"🚀 Ouverture de la page: {app_url}")
+    driver.get(app_url)
+    time.sleep(5)  # Attendre que la page se charge
 
     print("🚀 Getting username text field")
     username_input = wait.until(EC.element_to_be_clickable((By.NAME, "username")))
