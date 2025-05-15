@@ -27,15 +27,45 @@ pipeline {
       }
     }
 
-   stage('Start Angular') {
-     steps {
-       sh '''
-         # Utiliser http-server sans SSL
-         npx http-server ./dist/patient-front -p 4201 -a 0.0.0.0 --cors &
-         sleep 10
-       '''
-     }
-   }
+    stage('Verify Build') {
+      steps {
+        sh '''
+          echo "Contenu du répertoire dist:"
+          ls -la ./dist/patient-front/
+
+          echo "Vérification de l'index.html:"
+          ls -la ./dist/patient-front/index.html
+        '''
+      }
+    }
+
+    stage('Start Angular') {
+      steps {
+        sh '''
+          # Installer http-server si nécessaire
+          npm install -g http-server
+
+          # Démarrer http-server sans SSL
+          http-server ./dist/patient-front -p 4201 -a 0.0.0.0 --cors &
+
+          # Attendre que le serveur démarre
+          sleep 10
+        '''
+      }
+    }
+
+    stage('Check Server') {
+      steps {
+        sh '''
+          # Obtenir l'adresse IP
+          JENKINS_IP=$(hostname -i)
+
+          # Vérifier si le serveur répond
+          curl -v "http://$JENKINS_IP:4201/"
+          echo "✅ Server check complete!"
+        '''
+      }
+    }
 
     stage('Selenium E2E Test') {
       steps {
@@ -43,7 +73,7 @@ pipeline {
           # Obtenir l'adresse IP du conteneur Jenkins
           JENKINS_IP=$(hostname -i)
 
-          # Configurer l'URL pour les tests Selenium en utilisant l'adresse IP
+          # Configurer l'URL pour les tests Selenium
           export APP_URL="http://$JENKINS_IP:4201"
 
           # Exécuter le test Selenium
