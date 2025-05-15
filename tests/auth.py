@@ -20,7 +20,7 @@ wait = WebDriverWait(driver, 15)
 try:
     # Utiliser localhost car c'est exécuté depuis Jenkins qui a accès à l'app HTTP servie
     print("🚀 Ouverture de la page")
-    driver.get("http://localhost:4201/")
+    driver.get("http://jenkins:4201/")
     time.sleep(5)
 
     print("🚀 Getting username text field")

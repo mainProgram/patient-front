@@ -36,18 +36,17 @@ pipeline {
       }
     }
 
-    stage('Selenium E2E Test') {
-      steps {
-        sh '''
-          # Exécuter le test Selenium via Python
-          python3 tests/auth.py
+   stage('Selenium E2E Test') {
+     steps {
+       sh '''
+         # Exécuter le test Selenium via Python en spécifiant l'URL
+         APP_URL=http://jenkins:4201 python3 tests/auth.py
 
-          # Arrêter le serveur HTTP
-          pkill -f "http-server" || true
-        '''
-      }
-    }
-  }
+         # Ou utiliser l'adresse IP interne si le nom du service ne fonctionne pas
+         # APP_URL=http://$(hostname -i):4201 python3 tests/auth.py
+       '''
+     }
+   }
 
   post {
     always {
