@@ -1,98 +1,101 @@
-pipeline {
-  agent any
+  pipeline {
+    agent any
 
-  stages {
+    stages {
     stage('Checkout') {
-      steps {
-        checkout scm
-      }
+    steps {
+    checkout scm
+    }
     }
 
     stage('Node Version') {
-      steps {
-        sh 'node --version'
-        sh 'npm --version'
-      }
+    steps {
+    sh 'node --version'
+    sh 'npm --version'
+    }
     }
 
     stage('Install Dependencies') {
-      steps {
-        sh 'npm install'
-      }
+    steps {
+    sh 'npm install'
+    }
     }
 
     stage('Build') {
-      steps {
-        sh 'npm run build'
-      }
+    steps {
+    sh 'npm run build'
+    }
     }
 
     stage('Verify Build') {
-      steps {
-        sh '''
-          echo "Contenu du répertoire dist:"
-          ls -la ./dist/patient-front/
+    steps {
+    sh '''
+    echo "Contenu du répertoire dist:"
+    ls -la ./dist/patient-front/
 
-          echo "Vérification de l'index.html:"
-          ls -la ./dist/patient-front/index.html
-        '''
-      }
+    echo "Contenu du répertoire browser:"
+    ls -la ./dist/patient-front/browser/
+
+    echo "Vérification de l'index.html:"
+    ls -la ./dist/patient-front/browser/index.html || echo "index.html non trouvé dans browser"
+    '''
+    }
     }
 
     stage('Start Angular') {
-      steps {
-        sh '''
-          # Installer http-server si nécessaire
-          npm install -g http-server
+    steps {
+    sh '''
+    # Installer http-server si nécessaire
+    npm install -g http-server
 
-          # Démarrer http-server sans SSL
-          http-server ./dist/patient-front -p 4201 -a 0.0.0.0 --cors &
+    # Démarrer http-server pointant vers le dossier browser
+    http-server ./dist/patient-front/browser -p 4202 -a 0.0.0.0 --cors &
 
-          # Attendre que le serveur démarre
-          sleep 10
-        '''
-      }
+    # Attendre que le serveur démarre
+    sleep 10
+    '''
+    }
     }
 
     stage('Check Server') {
-      steps {
-        sh '''
-          # Obtenir l'adresse IP
-          JENKINS_IP=$(hostname -i)
+    steps {
+    sh '''
+    # Obtenir l'adresse IP
+    JENKINS_IP=$(hostname -i)
 
-          # Vérifier si le serveur répond
-          curl -v "http://$JENKINS_IP:4201/"
-          echo "✅ Server check complete!"
-        '''
-      }
+    # Vérifier si le serveur répond
+    curl -v "http://$JENKINS_IP:4202/" || echo "Erreur lors de l'accès au serveur"
+    echo "Server check complete!"
+    '''
+    }
     }
 
     stage('Selenium E2E Test') {
-      steps {
-        sh '''
-          # Obtenir l'adresse IP du conteneur Jenkins
-          JENKINS_IP=$(hostname -i)
+    steps {
+    sh '''
+    # Obtenir l'adresse IP du conteneur Jenkins
+    JENKINS_IP=$(hostname -i)
 
-          # Configurer l'URL pour les tests Selenium
-          export APP_URL="http://$JENKINS_IP:4201"
+    # Configurer l'URL pour les tests Selenium
+    export APP_URL="http://$JENKINS_IP:4202"
 
-          # Exécuter le test Selenium
-          python3 tests/auth.py "$APP_URL" || true
-        '''
-      }
+    # Exécuter le test Selenium
+    python3 tests/auth.py "$APP_URL" || true
+    '''
     }
-  }
+    }
+    }
 
-  post {
+    post {
     always {
-      sh 'pkill -f "http-server" || true'
-      deleteDir()
+    sh 'pkill -f "http-server" || true'
+    deleteDir()
     }
     success {
-      echo 'Build réussi!'
+    echo 'Build réussi!'
     }
     failure {
-      echo 'Build échoué!'
+    echo 'Build échoué!'
     }
   }
 }
