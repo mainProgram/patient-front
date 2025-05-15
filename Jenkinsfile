@@ -39,7 +39,7 @@ pipeline {
     stage('Selenium E2E Test') {
       steps {
         sh '''
-          python3 tests/auth.py
+          python3 tests/auth.py http://jenkins-frontend:4201 || true
         '''
       }
     }

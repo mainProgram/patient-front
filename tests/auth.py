@@ -19,7 +19,7 @@ driver = webdriver.Remote(
 
 # Obtenir l'adresse IP du conteneur Jenkins
 jenkins_ip = socket.gethostbyname('jenkins-frontend')
-app_url = f"http://{jenkins_ip}:4201"
+app_url = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:4201"
 
 wait = WebDriverWait(driver, 15)
 try:
