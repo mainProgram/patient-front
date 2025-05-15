@@ -39,14 +39,11 @@ pipeline {
     stage('Selenium E2E Test') {
       steps {
         sh '''
-          # Configurer l'URL pour les tests Selenium
-          export APP_URL="http://localhost:4201"
-
-          # Exécuter le test Selenium
-          python3 tests/auth.py || true
+          python3 tests/auth.py
         '''
       }
     }
+  }
 
   post {
     always {
