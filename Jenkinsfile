@@ -30,7 +30,8 @@ pipeline {
     stage('Start Angular') {
       steps {
         sh '''
-          npx http-server ./dist/patient-front -p 4201 &
+          # Utiliser le flag -S pour spécifier l'index.html par défaut
+          npx http-server ./dist/patient-front -p 4201 -a 0.0.0.0 -S -o false &
           sleep 5
         '''
       }
