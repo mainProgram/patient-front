@@ -1,23 +1,21 @@
 services:
   jenkins:
-    image: jenkins/jenkins:lts
+    build:
+      context: .
+      dockerfile: Jenkins.Dockerfile
     container_name: jenkins-frontend
-    privileged: true
     user: root
+    privileged: true
     ports:
       - "8087:8080"
       - "50007:50000"
     volumes:
       - jenkins_home_frontend:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
-      - /usr/bin/docker:/usr/bin/docker
-    environment:
-      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
     networks:
       - jenkins-frontend-net
     restart: unless-stopped
 
-  # Solution tout-en-un pour Selenium sur ARM64
   selenium:
     image: seleniarm/standalone-chromium:latest
     container_name: selenium
@@ -28,10 +26,11 @@ services:
     networks:
       - jenkins-frontend-net
 
+  # Ce conteneur utilise votre Dockerfile existant
   angular-test:
     build:
-      context: ./
-      dockerfile: Dockerfile
+      context: .
+      target: development  # Utilise le target 'development' de votre Dockerfile multi-stage
     container_name: angular-test
     ports:
       - "4201:4200"
@@ -41,24 +40,6 @@ services:
     networks:
       - jenkins-frontend-net
     command: ["tail", "-f", "/dev/null"]
-
-  # Conteneur Python pour les tests Selenium
-  selenium-test:
-    image: python:3.9-slim
-    container_name: selenium-test
-    volumes:
-      - ./tests:/tests
-    working_dir: /tests
-    networks:
-      - jenkins-frontend-net
-    depends_on:
-      - selenium
-      - angular-test
-    command: >
-      /bin/bash -c "
-        pip install selenium webdriver-manager &&
-        tail -f /dev/null
-      "
 
 networks:
   jenkins-frontend-net:
