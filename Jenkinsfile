@@ -27,15 +27,15 @@ pipeline {
       }
     }
 
-    stage('Start Angular') {
-      steps {
-        sh '''
-          # Utiliser le flag -S pour spécifier l'index.html par défaut
-          npx http-server ./dist/patient-front -p 4201 -a 0.0.0.0 -S -o false &
-          sleep 5
-        '''
-      }
-    }
+   stage('Start Angular') {
+     steps {
+       sh '''
+         # Utiliser http-server sans SSL
+         npx http-server ./dist/patient-front -p 4201 -a 0.0.0.0 --cors &
+         sleep 10
+       '''
+     }
+   }
 
     stage('Selenium E2E Test') {
       steps {
