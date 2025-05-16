@@ -42,7 +42,7 @@ try:
     time.sleep(3)  # Pause après avoir rempli le champ
 
     print("🚀 Filling password field")
-    password_input.send_keys("admin123")
+    password_input.send_keys("password123")
     time.sleep(3)  # Pause après avoir rempli le champ
 
     print("🚀 Submitting login form")
