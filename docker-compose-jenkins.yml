@@ -21,6 +21,12 @@ services:
     image: seleniarm/standalone-chromium:latest
     container_name: selenium
     shm_size: 4g
+    environment:
+      - SE_SCREEN_WIDTH=1920
+      - SE_SCREEN_HEIGHT=1080
+      - SE_SCREEN_DEPTH=24
+      - SE_VNC_VIEW_ONLY=false
+      - SE_OPTS=--disable-dev-shm-usage --no-sandbox
     ports:
       - "4444:4444"
       - "7900:7900"  # VNC
