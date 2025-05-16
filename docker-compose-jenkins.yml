@@ -37,9 +37,11 @@ services:
     volumes:
       - ./:/usr/src/app
       - /usr/src/app/node_modules
+    environment:
+      - API_URL=http://backend-api:8080/api
     networks:
       - jenkins-frontend-net
-    command: ["tail", "-f", "/dev/null"]
+    command: [ "npm", "run", "start", "--", "--host", "0.0.0.0" ]
 
   # Service Backend (patient-api)
   backend:
