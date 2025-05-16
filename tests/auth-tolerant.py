@@ -51,7 +51,7 @@ try:
         try:
             print("🚀 Remplissage des champs...")
             username_input.send_keys("admin")
-            password_input.send_keys("admin123")
+            password_input.send_keys("password123")
 
             print("✅ Test 2 passed: Champs remplis avec succès!")
 
