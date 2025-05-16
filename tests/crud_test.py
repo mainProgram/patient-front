@@ -69,6 +69,19 @@ try:
     print("✅ Connexion réussie")
     driver.save_screenshot("03_after_login.png")
 
+    # Stockez le token dans une variable
+    token = driver.execute_script("return localStorage.getItem('auth_token');")
+    print(f"Token après connexion: {token}")
+
+    # Vérifiez si le token existe toujours
+    current_token = driver.execute_script("return localStorage.getItem('auth_token');")
+    print(f"Token actuel: {current_token}")
+
+    # Si le token a disparu, rétablissez-le
+    if not current_token:
+        print("Le token a disparu, restauration...")
+        driver.execute_script(f"localStorage.setItem('auth_token', '{token}');")
+
     # CRÉATION (CREATE)
     print("=== TEST DE CRÉATION ===")
 
