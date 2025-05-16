@@ -109,7 +109,7 @@ pipeline {
       }
     }
 
-    stage('Selenium E2E Test') {
+    stage('E2E CRUD Test') {
       steps {
         sh '''
           # Obtenir l'adresse IP du conteneur Jenkins
@@ -118,12 +118,8 @@ pipeline {
           # Configurer l'URL pour les tests Selenium
           export APP_URL="http://$JENKINS_IP:4201"
 
-          # Copier le script de test tolérant
-          cp tests/auth.py tests/auth_tolerant.py
-
-          # Exécuter le test Selenium modifié
-          # Si vous avez créé un fichier séparé auth_tolerant.py, utilisez-le à la place
-          python3 tests/auth_tolerant.py "$APP_URL" || true
+          # Exécuter le test CRUD
+          python3 tests/crud_test.py "$APP_URL" || true
         '''
       }
     }
