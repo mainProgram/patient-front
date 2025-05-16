@@ -26,7 +26,10 @@ services:
       - SE_SCREEN_HEIGHT=1080
       - SE_SCREEN_DEPTH=24
       - SE_VNC_VIEW_ONLY=false
-      - SE_OPTS=--disable-dev-shm-usage --no-sandbox
+      - SE_NODE_MAX_SESSIONS=1
+      - SE_NODE_OVERRIDE_MAX_SESSIONS=false
+      - SE_NODE_DISABLE_DEV_SHM_USAGE=true
+      - SE_NODE_NO_SANDBOX=true
     ports:
       - "4444:4444"
       - "7900:7900"  # VNC

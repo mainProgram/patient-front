@@ -15,7 +15,8 @@ export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    component: LoginComponent,
+    component: PatientListComponent,
+    canActivate: [AuthGuard]
   },
   {
     path: 'patients',
