@@ -54,6 +54,7 @@ services:
         condition: service_healthy
     environment:
       - SPRING_PROFILES_ACTIVE=dev
+    command: [ "./mvnw", "spring-boot:run" ]
     networks:
       - jenkins-frontend-net
 
