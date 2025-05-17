@@ -70,7 +70,7 @@ try:
     driver.save_screenshot("03_after_login.png")
 
     # Stockez le token dans une variable
-    token = driver.execute_script("return localStorage.getItem('auth_token');")
+    token = driver.execute_script("return JSON.parse(localStorage.getItem('auth_token'));")
     print(f"Token après connexion: {token}")
 
     # Vérifiez si le token existe toujours
