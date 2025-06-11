@@ -1,6 +1,11 @@
 pipeline {
   agent any
 
+  environment {
+    TEST_USERNAME = credentials('admin')
+    TEST_PASSWORD = credentials('password123')
+  }
+
   stages {
     stage('Checkout') {
       steps {
