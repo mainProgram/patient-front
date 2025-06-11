@@ -124,11 +124,13 @@ pipeline {
 
   post {
     always {
-      script {
-        try {
-          deleteDir()
-        } catch (Exception e) {
-          echo "Erreur lors du nettoyage: ${e.getMessage()}"
+      node {
+        script {
+          try {
+            deleteDir()
+          } catch (Exception e) {
+            echo "Erreur lors du nettoyage: ${e.getMessage()}"
+          }
         }
       }
     }
