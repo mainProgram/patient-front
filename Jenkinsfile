@@ -110,6 +110,25 @@ pipeline {
       }
     }
 
+stage('Debug Authentication') {
+  steps {
+    sh '''
+      echo "=== Vérification du config.json ==="
+      cat ./dist/patient-front/browser/assets/config.json
+
+      echo "=== Test direct de l'API d'authentification ==="
+      curl -X POST "http://backend-api:8080/api/auth/signin" \
+        -H "Content-Type: application/json" \
+        -d '{"username":"admin","password":"wrongpassword"}' || echo "Erreur API"
+
+      echo "=== Test avec bons credentials ==="
+      curl -X POST "http://backend-api:8080/api/auth/signin" \
+        -H "Content-Type: application/json" \
+        -d '{"username":"admin","password":"password123"}' || echo "Erreur API"
+    '''
+  }
+}
+
     stage('E2E CRUD Test') {
       steps {
         sh '''
