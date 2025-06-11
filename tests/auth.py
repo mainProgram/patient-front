@@ -107,26 +107,53 @@ class AuthSecurityTests:
                 password_input.send_keys(password)
 
                 submit_button.click()
-                time.sleep(3)
+                time.sleep(5)  # Délai augmenté pour laisser l'API répondre
 
+                # Vérification 1: URL - doit rester sur login
                 current_url = self.driver.current_url
-                if "login" in current_url or current_url == self.app_url:
-                    print(f"Credentials invalides correctement rejetés")
 
-                    error_elements = self.driver.find_elements(By.CLASS_NAME, "error-message")
+                # Vérification 2: Pas de token stocké
+                token = self.driver.execute_script("return localStorage.getItem('auth_token');")
+
+                # Vérification 3: Logs d'erreur dans le navigateur
+                try:
+                    logs = self.driver.get_log('browser')
+                    for log in logs:
+                        if 'error' in log['message'].lower():
+                            print(f"Erreur JavaScript détectée: {log['message']}")
+                except:
+                    print("Impossible de récupérer les logs du navigateur")
+
+                # Vérification 4: Message d'erreur visible
+                error_elements = self.driver.find_elements(By.CLASS_NAME, "error-message")
+
+                # Analyse des résultats
+                if token:
+                    print(f"SÉCURITÉ COMPROMISE: Token trouvé avec mauvais credentials: {token[:20]}...")
+                    return False
+
+                if "patients" in current_url:
+                    print(f"SÉCURITÉ COMPROMISE: Redirection vers patients avec mauvais credentials!")
+                    return False
+
+                if "login" in current_url or current_url == self.app_url:
+                    print(f"Bon comportement: Reste sur la page de login")
+
                     if error_elements:
                         print(f"Message d'erreur affiché: {error_elements[0].text}")
                     else:
-                        print("Aucun message d'erreur visible")
+                        print("Aucun message d'erreur visible à l'utilisateur")
                 else:
-                    print(f"SÉCURITÉ COMPROMISE: Connexion réussie avec des credentials invalides!")
+                    print(f"Comportement inattendu: URL actuelle = {current_url}")
                     return False
 
             except Exception as e:
                 print(f"Erreur lors du test credentials invalides: {str(e)}")
+                return False
 
         print("Test des credentials invalides réussi")
         return True
+
 
     def run_all_tests(self):
         """Exécuter tous les tests de sécurité"""
