@@ -123,17 +123,6 @@ pipeline {
   }
 
   post {
-    always {
-      node {
-        script {
-          try {
-            deleteDir()
-          } catch (Exception e) {
-            echo "Erreur lors du nettoyage: ${e.getMessage()}"
-          }
-        }
-      }
-    }
     success {
       echo 'Build réussi!'
     }
