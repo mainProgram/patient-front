@@ -1,5 +1,4 @@
 import sys
-import os
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
@@ -17,10 +16,6 @@ driver = webdriver.Remote(
 )
 
 app_url = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:4201"
-
-# Configuration des credentials depuis les variables d'environnement
-username = os.getenv('TEST_USERNAME', 'admin')
-password = os.getenv('TEST_PASSWORD', 'password123')
 
 wait = WebDriverWait(driver, 30)
 
@@ -42,11 +37,11 @@ try:
     time.sleep(3)
 
     print("Saisie du nom d'utilisateur")
-    username_input.send_keys(username)
+    username_input.send_keys("admin")
     time.sleep(3)
 
     print("Saisie du mot de passe")
-    password_input.send_keys(password)
+    password_input.send_keys("password123")
     time.sleep(3)
 
     print("Soumission du formulaire de connexion")
