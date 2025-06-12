@@ -40,9 +40,9 @@ pipeline {
           echo "Vérification de l'index.html:"
           if [ -f ./dist/patient-front/browser/index.html ]; then
             ls -la ./dist/patient-front/browser/index.html
-            echo "✅ index.html trouvé dans le dossier browser"
+            echo "index.html trouvé dans le dossier browser"
           else
-            echo "❌ index.html non trouvé dans le dossier browser"
+            echo "index.html non trouvé dans le dossier browser"
             exit 1
           fi
         '''
@@ -110,26 +110,26 @@ pipeline {
       }
     }
 
-stage('Debug Authentication') {
-  steps {
-    sh '''
-      echo "=== Vérification du config.json ==="
-      cat ./dist/patient-front/browser/assets/config.json
+    stage('Debug Authentication') {
+      steps {
+        sh '''
+          echo "=== Vérification du config.json ==="
+          cat ./dist/patient-front/browser/assets/config.json
 
-      echo "=== Test direct de l'API d'authentification ==="
-      curl -X POST "http://backend-api:8080/api/auth/signin" \
-        -H "Content-Type: application/json" \
-        -d '{"username":"admin","password":"wrongpassword"}' || echo "Erreur API"
+          echo "=== Test direct de l'API d'authentification ==="
+          curl -X POST "http://backend-api:8080/api/auth/signin" \
+            -H "Content-Type: application/json" \
+            -d '{"username":"admin","password":"wrongpassword"}' || echo "Erreur API"
 
-      echo "=== Test avec bons credentials ==="
-      curl -X POST "http://backend-api:8080/api/auth/signin" \
-        -H "Content-Type: application/json" \
-        -d '{"username":"admin","password":"password123"}' || echo "Erreur API"
-    '''
-  }
-}
+          echo "=== Test avec bons credentials ==="
+          curl -X POST "http://backend-api:8080/api/auth/signin" \
+            -H "Content-Type: application/json" \
+            -d '{"username":"admin","password":"password123"}' || echo "Erreur API"
+        '''
+      }
+    }
 
-    stage('E2E CRUD Test') {
+    stage('E2E Test') {
       steps {
         sh '''
           # Obtenir l'adresse IP du conteneur Jenkins
@@ -138,7 +138,7 @@ stage('Debug Authentication') {
           # Configurer l'URL pour les tests Selenium
           export APP_URL="http://$JENKINS_IP:4201"
 
-          # Exécuter le test CRUD
+          # Exécuter le test auth
           python3 tests/auth.py "$APP_URL" || true
         '''
       }
