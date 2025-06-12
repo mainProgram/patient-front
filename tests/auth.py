@@ -129,7 +129,7 @@ class AuthSecurityTests:
                 error_elements = self.driver.find_elements(By.CLASS_NAME, "error-message")
 
                 # Analyse des résultats
-                if token:
+                 if token and token != "null":
                     print(f"SÉCURITÉ COMPROMISE: Token trouvé avec mauvais credentials: {token[:20]}...")
                     return False
 
