@@ -79,6 +79,7 @@ class AuthSecurityTests:
             print("Erreur lors du test de connexion valide:", str(e))
             return False
 
+
     def test_invalid_credentials(self):
         """Test de sécurité: tentatives de connexion avec des credentials invalides"""
         print("=== TEST: Credentials Invalides ===")
@@ -153,6 +154,7 @@ class AuthSecurityTests:
 
         print("Test des credentials invalides réussi")
         return True
+
 
 
     def run_all_tests(self):
