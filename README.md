@@ -20,5 +20,4 @@ Vous verrez la liste des patients
 ![build-2](https://github.com/user-attachments/assets/32f2e5f8-3182-4183-9aae-6940038ffff3)
 
 VNC URL : http://localhost:7900/vnc.html
-
 VNC URL : http://localhost:5900/vnc.html
