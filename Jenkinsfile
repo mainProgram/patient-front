@@ -139,7 +139,7 @@ pipeline {
           export APP_URL="http://$JENKINS_IP:4201"
 
           # Exécuter le test auth
-          python3 tests/auth.py "$APP_URL" || true
+          python3 tests/script.py "$APP_URL" || true
         '''
       }
     }
