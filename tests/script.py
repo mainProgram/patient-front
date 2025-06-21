@@ -271,7 +271,7 @@ class AuthSecurityTests:
                 password_input.clear()
                 password_input.send_keys(password)
 
-                screenshot_name = f"sql_variation_{username[:20].replace(' ', '_').replace("'", '')}"
+                screenshot_name = f'sql_variation_{username[:20].replace(" ", "_").replace("'", "")}'
                 screenshot_before = self.take_screenshot(f"{screenshot_name}_before")
                 submit_button.click()
                 time.sleep(3)
@@ -439,179 +439,6 @@ class AuthSecurityTests:
 
         return all_passed
 
-    def generate_simple_report(self):
-        """Générer un rapport simple"""
-        print("\n" + "="*60)
-        print("RAPPORT DES TESTS DE SÉCURITÉ")
-        print("="*60)
-        print(f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"URL: {self.app_url}")
-
-        passed = sum(1 for t in self.test_results if t['passed'])
-        failed = len(self.test_results) - passed
-
-        print(f"\nRésultats: {passed} réussis, {failed} échoués")
-        print(f"Taux de réussite: {(passed/len(self.test_results)*100):.1f}%")
-
-        if failed > 0:
-            print("\n--- Tests échoués ---")
-            for test in self.test_results:
-                if not test['passed']:
-                    print(f"❌ {test['test']}")
-                    if test['details']:
-                        print(f"   → {test['details']}")
-
-        # Sauvegarder le rapport JSON
-        report_file = f"security_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        with open(report_file, 'w') as f:
-            json.dump({
-                "date": datetime.now().isoformat(),
-                "url": self.app_url,
-                "summary": {
-                    "total": len(self.test_results),
-                    "passed": passed,
-                    "failed": failed
-                },
-                "results": self.test_results,
-                "screenshots": self.screenshots
-            }, f, indent=2)
-
-        print(f"\nRapport sauvegardé: {report_file}")
-
-    def generate_html_report(self):
-        """Générer un rapport HTML avec les captures"""
-        print("\n📊 Génération du rapport HTML...")
-
-        passed = sum(1 for t in self.test_results if t['passed'])
-        failed = len(self.test_results) - passed
-
-        html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <title>Rapport de Sécurité - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</title>
-    <style>
-        body {{ font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }}
-        .container {{ max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.1); }}
-        h1 {{ color: #333; text-align: center; }}
-        .summary {{ display: flex; justify-content: space-around; margin: 30px 0; }}
-        .stat {{ text-align: center; padding: 20px; border-radius: 8px; }}
-        .stat.success {{ background: #d4edda; color: #155724; }}
-        .stat.danger {{ background: #f8d7da; color: #721c24; }}
-        .stat.info {{ background: #d1ecf1; color: #0c5460; }}
-        .test {{ margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }}
-        .test.passed {{ border-left: 5px solid #28a745; }}
-        .test.failed {{ border-left: 5px solid #dc3545; background: #fff5f5; }}
-        .test h3 {{ margin: 0 0 10px 0; }}
-        .screenshot {{ margin: 20px 0; text-align: center; }}
-        .screenshot img {{ max-width: 100%; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; }}
-        .modal {{ display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); }}
-        .modal-content {{ margin: 2% auto; display: block; max-width: 90%; max-height: 90%; }}
-        .close {{ position: absolute; top: 15px; right: 35px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer; }}
-        .vulnerabilities {{ background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 15px; margin: 20px 0; }}
-        .vulnerabilities h3 {{ color: #856404; }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>📋 Rapport de Tests de Sécurité - Authentification</h1>
-        <p style="text-align: center; color: #666;">URL testée: {self.app_url}</p>
-
-        <div class="summary">
-            <div class="stat info">
-                <h2>{len(self.test_results)}</h2>
-                <p>Tests exécutés</p>
-            </div>
-            <div class="stat success">
-                <h2>{passed}</h2>
-                <p>Tests réussis</p>
-            </div>
-            <div class="stat danger">
-                <h2>{failed}</h2>
-                <p>Tests échoués</p>
-            </div>
-        </div>
-"""
-
-        # Ajouter une section pour les vulnérabilités critiques
-        critical_vulns = [t for t in self.test_results if not t['passed'] and 'injection' in t['test'].lower()]
-        if critical_vulns:
-            html += """
-        <div class="vulnerabilities">
-            <h3>⚠️ Vulnérabilités Critiques Détectées</h3>
-            <ul>
-"""
-            for vuln in critical_vulns:
-                html += f"<li><strong>{vuln['test']}</strong>: {vuln.get('details', 'N/A')}</li>\n"
-            html += """
-            </ul>
-        </div>
-"""
-
-        html += "<h2>📊 Détails des Tests</h2>"
-
-        for i, test in enumerate(self.test_results):
-            status = "passed" if test['passed'] else "failed"
-            icon = "✅" if test['passed'] else "❌"
-
-            html += f"""
-        <div class="test {status}">
-            <h3>{icon} {test['test']}</h3>
-            <p><strong>Statut:</strong> {'Réussi' if test['passed'] else 'Échoué'}</p>
-            <p><strong>Détails:</strong> {test.get('details', 'N/A')}</p>
-            <p><strong>Timestamp:</strong> {test['timestamp']}</p>
-"""
-
-            if test.get('screenshot'):
-                html += f"""
-            <div class="screenshot">
-                <img src="{test['screenshot']}" alt="Capture du test" onclick="openModal('modal{i}')">
-            </div>
-
-            <div id="modal{i}" class="modal" onclick="closeModal('modal{i}')">
-                <span class="close">&times;</span>
-                <img class="modal-content" src="{test['screenshot']}">
-            </div>
-"""
-
-            html += "</div>"
-
-        html += """
-        <h2>🔒 Recommandations de Sécurité</h2>
-        <ul>
-            <li><strong>Injections SQL:</strong> Utiliser des requêtes préparées (prepared statements) et paramétrer toutes les requêtes</li>
-            <li><strong>XSS:</strong> Échapper toutes les entrées utilisateur et implémenter une Content Security Policy (CSP)</li>
-            <li><strong>Normalisation des entrées:</strong> Appliquer trim() et lowercase() avant validation</li>
-            <li><strong>Rate limiting:</strong> Implémenter une limitation du nombre de tentatives de connexion</li>
-            <li><strong>CAPTCHA:</strong> Ajouter un CAPTCHA après 3 échecs de connexion</li>
-            <li><strong>Logging:</strong> Enregistrer toutes les tentatives de connexion suspectes</li>
-            <li><strong>Cookies sécurisés:</strong> Utiliser les flags HttpOnly et Secure pour tous les cookies de session</li>
-            <li><strong>2FA:</strong> Implémenter une authentification à deux facteurs pour les comptes sensibles</li>
-        </ul>
-
-        <h2>📸 Toutes les captures d'écran</h2>
-        <p>{len(self.screenshots)} captures d'écran ont été créées pendant les tests.</p>
-    </div>
-
-    <script>
-        function openModal(id) {
-            document.getElementById(id).style.display = "block";
-        }
-
-        function closeModal(id) {
-            document.getElementById(id).style.display = "none";
-        }
-    </script>
-</body>
-</html>
-"""
-
-        # Sauvegarder le rapport HTML
-        report_file = "security_report.html"
-        with open(report_file, 'w', encoding='utf-8') as f:
-            f.write(html)
-
-        print(f"✅ Rapport HTML sauvegardé: {report_file}")
-
     def run_tests(self):
         """Exécuter les tests principaux"""
         print("="*60)
@@ -626,10 +453,6 @@ class AuthSecurityTests:
         self.test_sql_injection_variations()
         self.test_xss_basic()
         self.test_authentication_bypass()
-
-        # Générer les rapports
-        self.generate_simple_report()
-        self.generate_html_report()
 
         # Lister toutes les captures créées
         print("\n📸 Captures d'écran créées:")
