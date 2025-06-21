@@ -22,26 +22,26 @@ class AuthSecurityTests:
         self.setup_screenshots_dir()
 
     def setup_screenshots_dir(self):
-        """Créer le répertoire pour les captures d'écran"""
+        """Creer le repertoire pour les captures d'ecran"""
         if not os.path.exists(self.screenshots_dir):
             os.makedirs(self.screenshots_dir)
-            print(f"Répertoire créé: {self.screenshots_dir}")
+            print(f"SUCCES: Repertoire cree: {self.screenshots_dir}")
 
     def take_screenshot(self, name, description=""):
-        """Prendre une capture d'écran avec un nom descriptif"""
+        """Prendre une capture d'ecran avec un nom descriptif"""
         try:
             self.screenshot_counter += 1
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"{self.screenshots_dir}/{self.screenshot_counter:02d}_{timestamp}_{name}.png"
 
             self.driver.save_screenshot(filename)
-            print(f"Capture d'écran: {filename}")
+            print(f"CAPTURE: Capture d'ecran: {filename}")
             if description:
                 print(f"   Description: {description}")
 
             return filename
         except Exception as e:
-            print(f"Erreur capture d'écran: {str(e)}")
+            print(f"ERREUR: Erreur capture d'ecran: {str(e)}")
             return None
 
     def setup_driver(self):
@@ -60,51 +60,51 @@ class AuthSecurityTests:
         self.wait = WebDriverWait(self.driver, 30)
 
     def navigate_to_login(self):
-        """Naviguer vers la page de login, gérer les redirections"""
+        """Naviguer vers la page de login, gerer les redirections"""
         try:
             print(f"Navigation vers: {self.app_url}")
             self.driver.get(self.app_url)
             time.sleep(3)
 
-            # Capture d'écran après navigation initiale
-            self.take_screenshot("initial_navigation", "Page après navigation initiale")
+            # Capture d'ecran apres navigation initiale
+            self.take_screenshot("initial_navigation", "Page apres navigation initiale")
 
-            # Vérifier si nous sommes déjà sur la page de login
+            # Verifier si nous sommes deja sur la page de login
             current_url = self.driver.current_url
             print(f"URL actuelle: {current_url}")
 
-            # Si on n'est pas sur login, essayer d'y accéder directement
+            # Si on n'est pas sur login, essayer d'y acceder directement
             if "login" not in current_url:
                 login_url = f"{self.app_url}/login"
                 print(f"Redirection manuelle vers: {login_url}")
                 self.driver.get(login_url)
                 time.sleep(3)
 
-                # Capture après redirection vers login
-                self.take_screenshot("redirect_to_login", "Page après redirection vers /login")
+                # Capture apres redirection vers login
+                self.take_screenshot("redirect_to_login", "Page apres redirection vers /login")
 
-            # Attendre que les champs de login soient présents
+            # Attendre que les champs de login soient presents
             try:
                 self.wait.until(EC.presence_of_element_located((By.NAME, "username")))
-                print("Page de login chargée avec succès")
+                print("SUCCES: Page de login chargee avec succes")
 
-                # Capture de la page de login prête
+                # Capture de la page de login prete
                 self.take_screenshot("login_page_ready", "Page de login avec champs visibles")
                 return True
             except TimeoutException:
-                print("Impossible de trouver les champs de login")
+                print("ERREUR: Impossible de trouver les champs de login")
                 # Capture en cas d'erreur
-                self.take_screenshot("login_page_error", "Erreur - champs de login non trouvés")
+                self.take_screenshot("login_page_error", "Erreur - champs de login non trouves")
                 print(f"Page HTML actuelle: {self.driver.page_source[:500]}")
                 return False
 
         except Exception as e:
-            print(f"Erreur lors de la navigation: {str(e)}")
+            print(f"ERREUR: Erreur lors de la navigation: {str(e)}")
             self.take_screenshot("navigation_error", f"Erreur navigation: {str(e)}")
             return False
 
     def log_test_result(self, test_name, passed, details="", screenshot_path=None):
-        """Enregistrer le résultat d'un test"""
+        """Enregistrer le resultat d'un test"""
         self.test_results.append({
             "test": test_name,
             "passed": passed,
@@ -112,32 +112,32 @@ class AuthSecurityTests:
             "screenshot": screenshot_path,
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         })
-        status = "PASSÉ" if passed else "ÉCHOUÉ"
+        status = "SUCCES PASSE" if passed else "ERREUR ECHOUE"
         print(f"{status} - {test_name}")
         if details:
-            print(f"   Détails: {details}")
+            print(f"   Details: {details}")
         if screenshot_path:
             print(f"   Capture: {screenshot_path}")
 
     def check_for_vulnerabilities(self):
-        """Vérifier les vulnérabilités communes après chaque tentative"""
+        """Verifier les vulnerabilites communes apres chaque tentative"""
         vulnerabilities = []
 
         try:
-            # Capture d'écran avant vérification des vulnérabilités
-            screenshot_path = self.take_screenshot("vulnerability_check", "État de la page lors de la vérification des vulnérabilités")
+            # Capture d'ecran avant verification des vulnerabilites
+            screenshot_path = self.take_screenshot("vulnerability_check", "Etat de la page lors de la verification des vulnerabilites")
 
-            # Vérifier si un token a été généré
+            # Verifier si un token a ete genere
             token = self.driver.execute_script("return localStorage.getItem('auth_token');")
             if token and token not in ["null", "undefined", "", None]:
-                vulnerabilities.append("Token généré malgré les mauvais credentials")
+                vulnerabilities.append("Token genere malgre les mauvais credentials")
 
-            # Vérifier l'URL actuelle
+            # Verifier l'URL actuelle
             current_url = self.driver.current_url
             if "patients" in current_url:
-                vulnerabilities.append("Redirection non autorisée vers la zone protégée")
+                vulnerabilities.append("Redirection non autorisee vers la zone protegee")
 
-            # Vérifier les cookies de session
+            # Verifier les cookies de session
             cookies = self.driver.get_cookies()
             for cookie in cookies:
                 if 'session' in cookie['name'].lower() and not cookie.get('httpOnly'):
@@ -145,13 +145,13 @@ class AuthSecurityTests:
                 if 'session' in cookie['name'].lower() and not cookie.get('secure'):
                     vulnerabilities.append(f"Cookie de session sans flag Secure: {cookie['name']}")
 
-            # Si des vulnérabilités sont détectées, prendre une capture spéciale
+            # Si des vulnerabilites sont detectees, prendre une capture speciale
             if vulnerabilities:
-                self.take_screenshot("vulnerability_detected", f"Vulnérabilités détectées: {', '.join(vulnerabilities)}")
+                self.take_screenshot("vulnerability_detected", f"Vulnerabilites detectees: {', '.join(vulnerabilities)}")
 
         except Exception as e:
-            print(f"Erreur lors de la vérification des vulnérabilités: {str(e)}")
-            self.take_screenshot("vulnerability_check_error", f"Erreur vérification: {str(e)}")
+            print(f"Erreur lors de la verification des vulnerabilites: {str(e)}")
+            self.take_screenshot("vulnerability_check_error", f"Erreur verification: {str(e)}")
 
         return vulnerabilities
 
@@ -160,7 +160,7 @@ class AuthSecurityTests:
         print("\n=== TEST: Injection SQL Basique ===")
 
         if not self.navigate_to_login():
-            self.log_test_result("Navigation vers login", False, "Impossible d'accéder à la page de login")
+            self.log_test_result("Navigation vers login", False, "Impossible d'acceder a la page de login")
             return False
 
         try:
@@ -182,8 +182,8 @@ class AuthSecurityTests:
             submit_button.click()
             time.sleep(3)
 
-            # Capture après soumission
-            screenshot_after = self.take_screenshot("sql_injection_after", "Après soumission injection SQL basique")
+            # Capture apres soumission
+            screenshot_after = self.take_screenshot("sql_injection_after", "Apres soumission injection SQL basique")
 
             vulnerabilities = self.check_for_vulnerabilities()
 
@@ -191,7 +191,7 @@ class AuthSecurityTests:
                 self.log_test_result(
                     "Protection injection SQL basique",
                     False,
-                    f"Vulnérabilités détectées: {', '.join(vulnerabilities)}",
+                    f"Vulnerabilites detectees: {', '.join(vulnerabilities)}",
                     screenshot_after
                 )
                 return False
@@ -199,7 +199,7 @@ class AuthSecurityTests:
                 self.log_test_result(
                     "Protection injection SQL basique",
                     True,
-                    "Injection SQL bloquée correctement",
+                    "Injection SQL bloquee correctement",
                     screenshot_after
                 )
                 return True
@@ -215,11 +215,11 @@ class AuthSecurityTests:
             return False
 
     def test_valid_login(self):
-        """Test de connexion valide pour vérifier que le système fonctionne"""
+        """Test de connexion valide pour verifier que le systeme fonctionne"""
         print("\n=== TEST: Connexion Valide ===")
 
         if not self.navigate_to_login():
-            self.log_test_result("Navigation vers login", False, "Impossible d'accéder à la page de login")
+            self.log_test_result("Navigation vers login", False, "Impossible d'acceder a la page de login")
             return False
 
         try:
@@ -240,33 +240,33 @@ class AuthSecurityTests:
             submit_button.click()
             time.sleep(5)
 
-            # Capture après connexion
-            screenshot_after = self.take_screenshot("valid_login_after", "Après connexion valide")
+            # Capture apres connexion
+            screenshot_after = self.take_screenshot("valid_login_after", "Apres connexion valide")
 
-            # Vérifier si on est bien connecté
+            # Verifier si on est bien connecte
             current_url = self.driver.current_url
             token = self.driver.execute_script("return localStorage.getItem('auth_token');")
 
             if "patients" in current_url or (token and token not in ["null", "undefined", "", None]):
-                # Capture de la page après connexion réussie
-                success_screenshot = self.take_screenshot("valid_login_success", "Connexion réussie - page protégée")
+                # Capture de la page apres connexion reussie
+                success_screenshot = self.take_screenshot("valid_login_success", "Connexion reussie - page protegee")
 
                 self.log_test_result(
                     "Connexion valide",
                     True,
-                    "Connexion réussie avec les bonnes credentials",
+                    "Connexion reussie avec les bonnes credentials",
                     success_screenshot
                 )
 
-                # Se déconnecter pour les prochains tests
+                # Se deconnecter pour les prochains tests
                 try:
                     logout_button = self.driver.find_element(By.ID, "logout")
                     logout_button.click()
                     time.sleep(2)
-                    # Capture après déconnexion
-                    self.take_screenshot("after_logout", "Après déconnexion")
+                    # Capture apres deconnexion
+                    self.take_screenshot("after_logout", "Apres deconnexion")
                 except:
-                    print("Pas de bouton de déconnexion trouvé")
+                    print("Pas de bouton de deconnexion trouve")
 
                 return True
             else:
@@ -289,7 +289,7 @@ class AuthSecurityTests:
             return False
 
     def test_sql_injection_variations(self):
-        """Test de différentes variations d'injection SQL"""
+        """Test de differentes variations d'injection SQL"""
         print("\n=== TEST: Variations d'Injection SQL ===")
 
         sql_payloads = [
@@ -323,8 +323,8 @@ class AuthSecurityTests:
                 submit_button.click()
                 time.sleep(3)
 
-                # Capture après chaque variation
-                screenshot_after = self.take_screenshot(f"sql_var_{i+1}_after", f"Après injection variation {i+1}")
+                # Capture apres chaque variation
+                screenshot_after = self.take_screenshot(f"sql_var_{i+1}_after", f"Apres injection variation {i+1}")
 
                 vulnerabilities = self.check_for_vulnerabilities()
 
@@ -332,7 +332,7 @@ class AuthSecurityTests:
                     self.log_test_result(
                         f"Protection SQL - {username[:20]}",
                         False,
-                        f"Vulnérabilités: {', '.join(vulnerabilities)}",
+                        f"Vulnerabilites: {', '.join(vulnerabilities)}",
                         screenshot_after
                     )
                     all_passed = False
@@ -340,7 +340,7 @@ class AuthSecurityTests:
                     self.log_test_result(
                         f"Protection SQL - {username[:20]}",
                         True,
-                        "Injection bloquée",
+                        "Injection bloquee",
                         screenshot_after
                     )
 
@@ -381,32 +381,32 @@ class AuthSecurityTests:
             submit_button.click()
             time.sleep(2)
 
-            # Capture après test XSS
-            screenshot_after = self.take_screenshot("xss_after", "Après test XSS")
+            # Capture apres test XSS
+            screenshot_after = self.take_screenshot("xss_after", "Apres test XSS")
 
-            # Vérifier si une alerte s'est déclenchée
+            # Verifier si une alerte s'est declenchee
             try:
                 alert = self.driver.switch_to.alert
                 alert_text = alert.text
                 # Capture de l'alerte si possible
-                alert_screenshot = self.take_screenshot("xss_alert", f"Alerte XSS détectée: {alert_text}")
+                alert_screenshot = self.take_screenshot("xss_alert", f"Alerte XSS detectee: {alert_text}")
                 alert.accept()
                 self.log_test_result(
                     "Protection XSS basique",
                     False,
-                    f"Alerte XSS déclenchée: {alert_text}",
+                    f"Alerte XSS declenchee: {alert_text}",
                     alert_screenshot
                 )
                 return False
             except:
-                # Pas d'alerte, vérifier le DOM
+                # Pas d'alerte, verifier le DOM
                 page_source = self.driver.page_source
                 if "<script>" in page_source and "alert" in page_source:
-                    dom_screenshot = self.take_screenshot("xss_dom_injection", "Script XSS injecté dans le DOM")
+                    dom_screenshot = self.take_screenshot("xss_dom_injection", "Script XSS injecte dans le DOM")
                     self.log_test_result(
                         "Protection XSS basique",
                         False,
-                        "Script injecté dans le DOM",
+                        "Script injecte dans le DOM",
                         dom_screenshot
                     )
                     return False
@@ -414,7 +414,7 @@ class AuthSecurityTests:
                     self.log_test_result(
                         "Protection XSS basique",
                         True,
-                        "XSS bloqué correctement",
+                        "XSS bloque correctement",
                         screenshot_after
                     )
                     return True
@@ -434,7 +434,7 @@ class AuthSecurityTests:
         print("\n=== TEST: Contournement d'Authentification ===")
 
         bypass_attempts = [
-            ("admin ", "password"),  # Espace après
+            ("admin ", "password"),  # Espace apres
             (" admin", "password"),  # Espace avant
             ("ADMIN", "password"),   # Majuscules
             ("admin\x00", "password"),  # Null byte
@@ -464,8 +464,8 @@ class AuthSecurityTests:
                 submit_button.click()
                 time.sleep(3)
 
-                # Capture après test de bypass
-                screenshot_after = self.take_screenshot(f"bypass_{i+1}_after", f"Après test bypass {i+1}")
+                # Capture apres test de bypass
+                screenshot_after = self.take_screenshot(f"bypass_{i+1}_after", f"Apres test bypass {i+1}")
 
                 vulnerabilities = self.check_for_vulnerabilities()
 
@@ -473,7 +473,7 @@ class AuthSecurityTests:
                     self.log_test_result(
                         f"Protection bypass - {username.strip()}",
                         False,
-                        f"Vulnérabilités: {', '.join(vulnerabilities)}",
+                        f"Vulnerabilites: {', '.join(vulnerabilities)}",
                         screenshot_after
                     )
                     all_passed = False
@@ -481,7 +481,7 @@ class AuthSecurityTests:
                     self.log_test_result(
                         f"Protection bypass - {username.strip()}",
                         True,
-                        "Tentative bloquée",
+                        "Tentative bloquee",
                         screenshot_after
                     )
 
@@ -498,35 +498,35 @@ class AuthSecurityTests:
         return all_passed
 
     def generate_simple_report(self):
-        """Générer un rapport simple"""
+        """Generer un rapport simple"""
         print("\n" + "="*60)
-        print("RAPPORT DES TESTS DE SÉCURITÉ")
+        print("RAPPORT DES TESTS DE SECURITE")
         print("="*60)
         print(f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         print(f"URL: {self.app_url}")
-        print(f"Captures d'écran: {self.screenshot_counter} fichiers dans {self.screenshots_dir}/")
+        print(f"Captures d'ecran: {self.screenshot_counter} fichiers dans {self.screenshots_dir}/")
 
         passed = sum(1 for t in self.test_results if t['passed'])
         failed = len(self.test_results) - passed
 
-        print(f"\nRésultats: {passed} réussis, {failed} échoués")
-        print(f"Taux de réussite: {(passed/len(self.test_results)*100):.1f}%")
+        print(f"\nResultats: {passed} reussis, {failed} echoues")
+        print(f"Taux de reussite: {(passed/len(self.test_results)*100):.1f}%")
 
         if failed > 0:
-            print("\n--- Tests échoués ---")
+            print("\n--- Tests echoues ---")
             for test in self.test_results:
                 if not test['passed']:
-                    print(f"{test['test']}")
+                    print(f"ERREUR {test['test']}")
                     if test['details']:
-                        print(f"   → {test['details']}")
+                        print(f"   -> {test['details']}")
                     if test.get('screenshot'):
-                        print(f"   {test['screenshot']}")
+                        print(f"   CAPTURE {test['screenshot']}")
 
-        # Lister toutes les captures d'écran
-        print(f"\n--- Captures d'écran créées ({self.screenshot_counter} total) ---")
+        # Lister toutes les captures d'ecran
+        print(f"\n--- Captures d'ecran creees ({self.screenshot_counter} total) ---")
         for test in self.test_results:
             if test.get('screenshot'):
-                print(f"{test['screenshot']} - {test['test']}")
+                print(f"CAPTURE {test['screenshot']} - {test['test']}")
 
         # Sauvegarder le rapport JSON
         report_file = f"security_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
@@ -544,41 +544,41 @@ class AuthSecurityTests:
                 "results": self.test_results
             }, f, indent=2)
 
-        print(f"\nRapport sauvegardé: {report_file}")
+        print(f"\nRapport sauvegarde: {report_file}")
 
     def run_tests(self):
-        """Exécuter les tests principaux"""
+        """Executer les tests principaux"""
         print("="*60)
-        print("TESTS DE SÉCURITÉ - AUTHENTIFICATION")
+        print("TESTS DE SECURITE - AUTHENTIFICATION")
         print("="*60)
 
-        # Capture d'écran initiale
+        # Capture d'ecran initiale
         try:
             self.driver.get(self.app_url)
             time.sleep(2)
-            self.take_screenshot("test_start", "Début des tests de sécurité")
+            self.take_screenshot("test_start", "Debut des tests de securite")
         except:
             pass
 
         # Test de connexion valide d'abord
         self.test_valid_login()
 
-        # Tests de sécurité
+        # Tests de securite
         self.test_basic_injection()
         self.test_sql_injection_variations()
         self.test_xss_basic()
         self.test_authentication_bypass()
 
-        # Capture d'écran finale
+        # Capture d'ecran finale
         try:
-            self.take_screenshot("test_end", "Fin des tests de sécurité")
+            self.take_screenshot("test_end", "Fin des tests de securite")
         except:
             pass
 
-        # Générer le rapport
+        # Generer le rapport
         self.generate_simple_report()
 
-        # Retourner le succès global
+        # Retourner le succes global
         failed = sum(1 for t in self.test_results if not t['passed'])
         return failed == 0
 
@@ -592,24 +592,24 @@ class AuthSecurityTests:
             except:
                 pass
 
-# Point d'entrée principal
+# Point d'entree principal
 if __name__ == "__main__":
     app_url = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:4201"
 
-    print(f"Démarrage des tests de sécurité sur: {app_url}")
+    print(f"Demarrage des tests de securite sur: {app_url}")
 
     tests = AuthSecurityTests(app_url)
 
     try:
         success = tests.run_tests()
         if success:
-            print("\nTests de sécurité terminés avec succès!")
+            print("\nSUCCES: Tests de securite termines avec succes!")
             exit(0)
         else:
-            print("\nCertains tests ont échoué!")
+            print("\nATTENTION: Certains tests ont echoue!")
             exit(0)  # Exit 0 pour ne pas bloquer Jenkins
     except Exception as e:
-        print(f"\nErreur fatale: {str(e)}")
+        print(f"\nERREUR: Erreur fatale: {str(e)}")
         try:
             tests.take_screenshot("fatal_error", f"Erreur fatale: {str(e)}")
         except:
