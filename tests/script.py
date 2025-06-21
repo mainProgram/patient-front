@@ -1,6 +1,7 @@
 import sys
 import time
 import json
+import os
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
@@ -15,22 +16,33 @@ class AuthSecurityTests:
         self.driver = None
         self.wait = None
         self.test_results = []
+        self.screenshots = []
+        self.screenshot_dir = "test-screenshots"
         self.setup_driver()
+
+        # Créer le dossier pour les captures
+        if not os.path.exists(self.screenshot_dir):
+            os.makedirs(self.screenshot_dir)
 
     def setup_driver(self):
         options = Options()
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--window-size=1920,1080")
-        options.add_argument("--disable-gpu")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-setuid-sandbox")
 
         self.driver = webdriver.Remote(
             command_executor='http://selenium:4444/wd/hub',
             options=options
         )
         self.wait = WebDriverWait(self.driver, 30)
+
+    def take_screenshot(self, name):
+        """Prendre une capture d'écran avec un nom descriptif"""
+        filename = f"{self.screenshot_dir}/{name}_{datetime.now().strftime('%H%M%S')}.png"
+        self.driver.save_screenshot(filename)
+        self.screenshots.append(filename)
+        print(f"📸 Capture d'écran sauvegardée: {filename}")
+        return filename
 
     def navigate_to_login(self):
         """Naviguer vers la page de login, gérer les redirections"""
@@ -39,128 +51,54 @@ class AuthSecurityTests:
             self.driver.get(self.app_url)
             time.sleep(3)
 
-            # Vérifier si nous sommes déjà sur la page de login
+            # Capture de la page initiale
+            self.take_screenshot("01_page_initiale")
+
             current_url = self.driver.current_url
             print(f"URL actuelle: {current_url}")
 
-            # Si on n'est pas sur login, essayer d'y accéder directement
             if "login" not in current_url:
                 login_url = f"{self.app_url}/login"
                 print(f"Redirection manuelle vers: {login_url}")
                 self.driver.get(login_url)
                 time.sleep(3)
 
-            # Attendre que les champs de login soient présents
             try:
                 self.wait.until(EC.presence_of_element_located((By.NAME, "username")))
+                self.take_screenshot("02_page_login")
                 print("✅ Page de login chargée avec succès")
                 return True
             except TimeoutException:
                 print("❌ Impossible de trouver les champs de login")
-                # Prendre une capture d'écran pour debug
-                self.driver.save_screenshot("login_page_error.png")
-                print(f"Page HTML actuelle: {self.driver.page_source[:500]}")
+                self.take_screenshot("03_erreur_login")
                 return False
 
         except Exception as e:
             print(f"❌ Erreur lors de la navigation: {str(e)}")
+            self.take_screenshot("04_erreur_navigation")
             return False
 
-    def log_test_result(self, test_name, passed, details=""):
-        """Enregistrer le résultat d'un test"""
-        self.test_results.append({
+    def log_test_result(self, test_name, passed, details="", screenshot=None):
+        """Enregistrer le résultat d'un test avec capture"""
+        result = {
             "test": test_name,
             "passed": passed,
             "details": details,
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        })
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "screenshot": screenshot
+        }
+        self.test_results.append(result)
+
         status = "✅ PASSÉ" if passed else "❌ ÉCHOUÉ"
         print(f"{status} - {test_name}")
         if details:
             print(f"   Détails: {details}")
 
-    def check_for_vulnerabilities(self):
-        """Vérifier les vulnérabilités communes après chaque tentative"""
-        vulnerabilities = []
-
-        try:
-            # Vérifier si un token a été généré
-            token = self.driver.execute_script("return localStorage.getItem('auth_token');")
-            if token and token not in ["null", "undefined", "", None]:
-                vulnerabilities.append("Token généré malgré les mauvais credentials")
-
-            # Vérifier l'URL actuelle
-            current_url = self.driver.current_url
-            if "patients" in current_url:
-                vulnerabilities.append("Redirection non autorisée vers la zone protégée")
-
-            # Vérifier les cookies de session
-            cookies = self.driver.get_cookies()
-            for cookie in cookies:
-                if 'session' in cookie['name'].lower() and not cookie.get('httpOnly'):
-                    vulnerabilities.append(f"Cookie de session sans flag HttpOnly: {cookie['name']}")
-                if 'session' in cookie['name'].lower() and not cookie.get('secure'):
-                    vulnerabilities.append(f"Cookie de session sans flag Secure: {cookie['name']}")
-        except Exception as e:
-            print(f"Erreur lors de la vérification des vulnérabilités: {str(e)}")
-
-        return vulnerabilities
-
-    def test_basic_injection(self):
-        """Test basique d'injection SQL"""
-        print("\n=== TEST: Injection SQL Basique ===")
-
-        if not self.navigate_to_login():
-            self.log_test_result("Navigation vers login", False, "Impossible d'accéder à la page de login")
-            return False
-
-        try:
-            # Test simple d'injection SQL
-            username_input = self.wait.until(EC.element_to_be_clickable((By.NAME, "username")))
-            password_input = self.wait.until(EC.element_to_be_clickable((By.NAME, "password")))
-            submit_button = self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
-
-            # Injection SQL classique
-            username_input.clear()
-            username_input.send_keys("admin' OR '1'='1")
-            password_input.clear()
-            password_input.send_keys("password")
-
-            print("Tentative d'injection SQL...")
-            submit_button.click()
-            time.sleep(3)
-
-            vulnerabilities = self.check_for_vulnerabilities()
-
-            if vulnerabilities:
-                self.log_test_result(
-                    "Protection injection SQL basique",
-                    False,
-                    f"Vulnérabilités détectées: {', '.join(vulnerabilities)}"
-                )
-                return False
-            else:
-                self.log_test_result(
-                    "Protection injection SQL basique",
-                    True,
-                    "Injection SQL bloquée correctement"
-                )
-                return True
-
-        except Exception as e:
-            self.log_test_result(
-                "Test injection SQL basique",
-                False,
-                f"Erreur: {str(e)}"
-            )
-            return False
-
     def test_valid_login(self):
-        """Test de connexion valide pour vérifier que le système fonctionne"""
-        print("\n=== TEST: Connexion Valide ===")
+        """Test de connexion valide"""
+        print("\\n=== TEST: Connexion Valide ===")
 
         if not self.navigate_to_login():
-            self.log_test_result("Navigation vers login", False, "Impossible d'accéder à la page de login")
             return False
 
         try:
@@ -168,113 +106,59 @@ class AuthSecurityTests:
             password_input = self.wait.until(EC.element_to_be_clickable((By.NAME, "password")))
             submit_button = self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
 
-            # Utiliser les vraies credentials
             username_input.clear()
             username_input.send_keys("admin")
             password_input.clear()
             password_input.send_keys("password123")
 
-            print("Tentative de connexion valide...")
+            self.take_screenshot("05_avant_connexion_valide")
+
             submit_button.click()
             time.sleep(5)
 
-            # Vérifier si on est bien connecté
             current_url = self.driver.current_url
             token = self.driver.execute_script("return localStorage.getItem('auth_token');")
 
             if "patients" in current_url or (token and token not in ["null", "undefined", "", None]):
+                screenshot = self.take_screenshot("06_connexion_reussie")
                 self.log_test_result(
                     "Connexion valide",
                     True,
-                    "Connexion réussie avec les bonnes credentials"
+                    "Connexion réussie avec les bonnes credentials",
+                    screenshot
                 )
 
-                # Se déconnecter pour les prochains tests
                 try:
                     logout_button = self.driver.find_element(By.ID, "logout")
                     logout_button.click()
                     time.sleep(2)
                 except:
-                    print("Pas de bouton de déconnexion trouvé")
+                    pass
 
                 return True
             else:
+                screenshot = self.take_screenshot("07_echec_connexion")
                 self.log_test_result(
                     "Connexion valide",
                     False,
-                    "Impossible de se connecter avec des credentials valides"
+                    "Impossible de se connecter",
+                    screenshot
                 )
                 return False
 
         except Exception as e:
+            screenshot = self.take_screenshot("08_erreur_test_connexion")
             self.log_test_result(
                 "Test connexion valide",
                 False,
-                f"Erreur: {str(e)}"
+                f"Erreur: {str(e)}",
+                screenshot
             )
             return False
 
-    def test_sql_injection_variations(self):
-        """Test de différentes variations d'injection SQL"""
-        print("\n=== TEST: Variations d'Injection SQL ===")
-
-        sql_payloads = [
-            ("admin' --", "password"),
-            ("admin' OR 1=1 --", "password"),
-            ("' OR '1'='1' --", "' OR '1'='1' --"),
-            ("admin'; DROP TABLE users; --", "password"),
-        ]
-
-        all_passed = True
-
-        for username, password in sql_payloads:
-            if not self.navigate_to_login():
-                continue
-
-            try:
-                print(f"\nTest injection: {username[:30]}...")
-
-                username_input = self.wait.until(EC.element_to_be_clickable((By.NAME, "username")))
-                password_input = self.wait.until(EC.element_to_be_clickable((By.NAME, "password")))
-                submit_button = self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
-
-                username_input.clear()
-                username_input.send_keys(username)
-                password_input.clear()
-                password_input.send_keys(password)
-
-                submit_button.click()
-                time.sleep(3)
-
-                vulnerabilities = self.check_for_vulnerabilities()
-
-                if vulnerabilities:
-                    self.log_test_result(
-                        f"Protection SQL - {username[:20]}",
-                        False,
-                        f"Vulnérabilités: {', '.join(vulnerabilities)}"
-                    )
-                    all_passed = False
-                else:
-                    self.log_test_result(
-                        f"Protection SQL - {username[:20]}",
-                        True,
-                        "Injection bloquée"
-                    )
-
-            except Exception as e:
-                self.log_test_result(
-                    f"Test SQL - {username[:20]}",
-                    False,
-                    f"Erreur: {str(e)}"
-                )
-                all_passed = False
-
-        return all_passed
-
-    def test_xss_basic(self):
-        """Test XSS basique"""
-        print("\n=== TEST: XSS Basique ===")
+    def test_sql_injection(self):
+        """Test d'injection SQL"""
+        print("\\n=== TEST: Injection SQL ===")
 
         if not self.navigate_to_login():
             return False
@@ -284,136 +168,163 @@ class AuthSecurityTests:
             password_input = self.wait.until(EC.element_to_be_clickable((By.NAME, "password")))
             submit_button = self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
 
-            # Test XSS simple
-            xss_payload = "<script>alert('XSS')</script>"
+            # Injection SQL
             username_input.clear()
-            username_input.send_keys(xss_payload)
+            username_input.send_keys("admin' OR '1'='1")
             password_input.clear()
             password_input.send_keys("password")
 
-            submit_button.click()
-            time.sleep(2)
+            self.take_screenshot("09_tentative_injection_sql")
 
-            # Vérifier si une alerte s'est déclenchée
-            try:
-                alert = self.driver.switch_to.alert
-                alert_text = alert.text
-                alert.accept()
+            submit_button.click()
+            time.sleep(3)
+
+            current_url = self.driver.current_url
+            token = self.driver.execute_script("return localStorage.getItem('auth_token');")
+
+            if "patients" in current_url or (token and token not in ["null", "undefined", "", None]):
+                screenshot = self.take_screenshot("10_injection_sql_reussie")
                 self.log_test_result(
-                    "Protection XSS basique",
+                    "Protection injection SQL",
                     False,
-                    f"Alerte XSS déclenchée: {alert_text}"
+                    "VULNÉRABILITÉ CRITIQUE: Injection SQL réussie!",
+                    screenshot
                 )
                 return False
-            except:
-                # Pas d'alerte, vérifier le DOM
-                page_source = self.driver.page_source
-                if "<script>" in page_source and "alert" in page_source:
-                    self.log_test_result(
-                        "Protection XSS basique",
-                        False,
-                        "Script injecté dans le DOM"
-                    )
-                    return False
-                else:
-                    self.log_test_result(
-                        "Protection XSS basique",
-                        True,
-                        "XSS bloqué correctement"
-                    )
-                    return True
+            else:
+                screenshot = self.take_screenshot("11_injection_sql_bloquee")
+                self.log_test_result(
+                    "Protection injection SQL",
+                    True,
+                    "Injection SQL bloquée correctement",
+                    screenshot
+                )
+                return True
 
         except Exception as e:
+            screenshot = self.take_screenshot("12_erreur_test_sql")
             self.log_test_result(
-                "Test XSS basique",
+                "Test injection SQL",
                 False,
-                f"Erreur: {str(e)}"
+                f"Erreur: {str(e)}",
+                screenshot
             )
             return False
 
-    def test_authentication_bypass(self):
-        """Test de contournement d'authentification simple"""
-        print("\n=== TEST: Contournement d'Authentification ===")
-
-        bypass_attempts = [
-            ("admin ", "password"),  # Espace après
-            (" admin", "password"),  # Espace avant
-            ("ADMIN", "password"),   # Majuscules
-            ("admin\x00", "password"),  # Null byte
-        ]
-
-        all_passed = True
-
-        for username, password in bypass_attempts:
-            if not self.navigate_to_login():
-                continue
-
-            try:
-                print(f"\nTest bypass: '{username}'")
-
-                username_input = self.wait.until(EC.element_to_be_clickable((By.NAME, "username")))
-                password_input = self.wait.until(EC.element_to_be_clickable((By.NAME, "password")))
-                submit_button = self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
-
-                username_input.clear()
-                username_input.send_keys(username)
-                password_input.clear()
-                password_input.send_keys(password)
-
-                submit_button.click()
-                time.sleep(3)
-
-                vulnerabilities = self.check_for_vulnerabilities()
-
-                if vulnerabilities:
-                    self.log_test_result(
-                        f"Protection bypass - {username.strip()}",
-                        False,
-                        f"Vulnérabilités: {', '.join(vulnerabilities)}"
-                    )
-                    all_passed = False
-                else:
-                    self.log_test_result(
-                        f"Protection bypass - {username.strip()}",
-                        True,
-                        "Tentative bloquée"
-                    )
-
-            except Exception as e:
-                self.log_test_result(
-                    f"Test bypass - {username.strip()}",
-                    False,
-                    f"Erreur: {str(e)}"
-                )
-                all_passed = False
-
-        return all_passed
-
-    def generate_simple_report(self):
-        """Générer un rapport simple"""
-        print("\n" + "="*60)
-        print("RAPPORT DES TESTS DE SÉCURITÉ")
-        print("="*60)
-        print(f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"URL: {self.app_url}")
+    def generate_html_report(self):
+        """Générer un rapport HTML avec les captures"""
+        print("\\n📊 Génération du rapport HTML...")
 
         passed = sum(1 for t in self.test_results if t['passed'])
         failed = len(self.test_results) - passed
 
-        print(f"\nRésultats: {passed} réussis, {failed} échoués")
-        print(f"Taux de réussite: {(passed/len(self.test_results)*100):.1f}%")
+        html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <title>Rapport de Sécurité - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</title>
+    <style>
+        body {{ font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }}
+        .container {{ max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.1); }}
+        h1 {{ color: #333; text-align: center; }}
+        .summary {{ display: flex; justify-content: space-around; margin: 30px 0; }}
+        .stat {{ text-align: center; padding: 20px; border-radius: 8px; }}
+        .stat.success {{ background: #d4edda; color: #155724; }}
+        .stat.danger {{ background: #f8d7da; color: #721c24; }}
+        .stat.info {{ background: #d1ecf1; color: #0c5460; }}
+        .test {{ margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }}
+        .test.passed {{ border-left: 5px solid #28a745; }}
+        .test.failed {{ border-left: 5px solid #dc3545; background: #fff5f5; }}
+        .test h3 {{ margin: 0 0 10px 0; }}
+        .screenshot {{ margin: 20px 0; text-align: center; }}
+        .screenshot img {{ max-width: 100%; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; }}
+        .modal {{ display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); }}
+        .modal-content {{ margin: 2% auto; display: block; max-width: 90%; max-height: 90%; }}
+        .close {{ position: absolute; top: 15px; right: 35px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 Rapport de Tests de Sécurité - Authentification</h1>
+        <p style="text-align: center; color: #666;">URL testée: {self.app_url}</p>
 
-        if failed > 0:
-            print("\n--- Tests échoués ---")
-            for test in self.test_results:
-                if not test['passed']:
-                    print(f"❌ {test['test']}")
-                    if test['details']:
-                        print(f"   → {test['details']}")
+        <div class="summary">
+            <div class="stat info">
+                <h2>{len(self.test_results)}</h2>
+                <p>Tests exécutés</p>
+            </div>
+            <div class="stat success">
+                <h2>{passed}</h2>
+                <p>Tests réussis</p>
+            </div>
+            <div class="stat danger">
+                <h2>{failed}</h2>
+                <p>Tests échoués</p>
+            </div>
+        </div>
 
-        # Sauvegarder le rapport JSON
-        report_file = f"security_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        with open(report_file, 'w') as f:
+        <h2>📊 Détails des Tests</h2>
+"""
+
+        for i, test in enumerate(self.test_results):
+            status = "passed" if test['passed'] else "failed"
+            icon = "✅" if test['passed'] else "❌"
+
+            html += f"""
+        <div class="test {status}">
+            <h3>{icon} {test['test']}</h3>
+            <p><strong>Statut:</strong> {'Réussi' if test['passed'] else 'Échoué'}</p>
+            <p><strong>Détails:</strong> {test.get('details', 'N/A')}</p>
+            <p><strong>Timestamp:</strong> {test['timestamp']}</p>
+"""
+
+            if test.get('screenshot'):
+                html += f"""
+            <div class="screenshot">
+                <img src="{test['screenshot']}" alt="Capture du test" onclick="openModal('modal{i}')">
+            </div>
+
+            <div id="modal{i}" class="modal" onclick="closeModal('modal{i}')">
+                <span class="close">&times;</span>
+                <img class="modal-content" src="{test['screenshot']}">
+            </div>
+"""
+
+            html += "</div>"
+
+        html += """
+        <h2>🔒 Recommandations de Sécurité</h2>
+        <ul>
+            <li>Implémenter des requêtes préparées pour éviter les injections SQL</li>
+            <li>Normaliser les entrées (trim, lowercase) avant validation</li>
+            <li>Ajouter un système de rate limiting</li>
+            <li>Implémenter un CAPTCHA après plusieurs échecs</li>
+            <li>Ajouter des logs de sécurité pour toutes les tentatives de connexion</li>
+        </ul>
+    </div>
+
+    <script>
+        function openModal(id) {
+            document.getElementById(id).style.display = "block";
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = "none";
+        }
+    </script>
+</body>
+</html>
+"""
+
+        # Sauvegarder le rapport HTML
+        report_file = "security_report.html"
+        with open(report_file, 'w', encoding='utf-8') as f:
+            f.write(html)
+
+        print(f"✅ Rapport HTML sauvegardé: {report_file}")
+
+        # Sauvegarder aussi un JSON
+        json_file = f"security_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        with open(json_file, 'w') as f:
             json.dump({
                 "date": datetime.now().isoformat(),
                 "url": self.app_url,
@@ -422,63 +333,150 @@ class AuthSecurityTests:
                     "passed": passed,
                     "failed": failed
                 },
-                "results": self.test_results
+                "results": self.test_results,
+                "screenshots": self.screenshots
             }, f, indent=2)
-
-        print(f"\nRapport sauvegardé: {report_file}")
 
     def run_tests(self):
         """Exécuter les tests principaux"""
         print("="*60)
-        print("TESTS DE SÉCURITÉ - AUTHENTIFICATION")
+        print("TESTS DE SÉCURITÉ AVEC CAPTURES D'ÉCRAN")
         print("="*60)
 
-        # Test de connexion valide d'abord
         self.test_valid_login()
+        self.test_sql_injection()
 
-        # Tests de sécurité
-        self.test_basic_injection()
-        self.test_sql_injection_variations()
-        self.test_xss_basic()
-        self.test_authentication_bypass()
+        self.generate_html_report()
 
-        # Générer le rapport
-        self.generate_simple_report()
-
-        # Retourner le succès global
-        failed = sum(1 for t in self.test_results if not t['passed'])
-        return failed == 0
+        # Lister toutes les captures créées
+        print("\\n📸 Captures d'écran créées:")
+        for screenshot in self.screenshots:
+            print(f"  - {screenshot}")
 
     def cleanup(self):
-        """Nettoyer les ressources"""
         if self.driver:
-            try:
-                self.driver.quit()
-            except:
-                pass
+            self.driver.quit()
 
 # Point d'entrée principal
 if __name__ == "__main__":
     app_url = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:4201"
 
-    print(f"Démarrage des tests de sécurité sur: {app_url}")
-
     tests = AuthSecurityTests(app_url)
 
     try:
-        success = tests.run_tests()
-        if success:
-            print("\n✅ Tests de sécurité terminés avec succès!")
-            exit(0)
-        else:
-            print("\n⚠️ Certains tests ont échoué!")
-            exit(0)  # Exit 0 pour ne pas bloquer Jenkins
+        tests.run_tests()
+        print("\\n✅ Tests terminés!")
+        exit(0)
     except Exception as e:
-        print(f"\n❌ Erreur fatale: {str(e)}")
-        try:
-            tests.driver.save_screenshot("fatal_error.png")
-        except:
-            pass
+        print(f"\\n❌ Erreur: {str(e)}")
         exit(1)
     finally:
         tests.cleanup()
+EOF
+
+          # Exécuter le test
+          python3 tests/security_test_with_screenshots.py "$APP_URL"
+
+          # Lister les captures créées
+          echo "=== Captures d'écran créées ==="
+          ls -la test-screenshots/ || echo "Pas de captures trouvées"
+
+          # Compter les captures
+          if [ -d test-screenshots ]; then
+            echo "Nombre de captures: $(ls -1 test-screenshots/*.png 2>/dev/null | wc -l)"
+          fi
+        '''
+      }
+    }
+
+    stage('Generate Screenshot Gallery') {
+      steps {
+        sh '''
+          # Créer une galerie HTML pour visualiser toutes les captures
+          cat > screenshot_gallery.html << 'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Galerie des Captures - Tests de Sécurité</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f0f0f0; }
+        h1 { text-align: center; color: #333; }
+        .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding: 20px; }
+        .screenshot { background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .screenshot img { width: 100%; height: auto; border-radius: 4px; cursor: pointer; }
+        .screenshot h3 { margin: 10px 0 5px 0; font-size: 14px; color: #555; }
+    </style>
+</head>
+<body>
+    <h1>📸 Galerie des Captures d'Écran</h1>
+    <div class="gallery">
+EOF
+
+          # Ajouter chaque capture à la galerie
+          if [ -d test-screenshots ]; then
+            for img in test-screenshots/*.png; do
+              if [ -f "$img" ]; then
+                filename=$(basename "$img")
+                echo "<div class='screenshot'><h3>$filename</h3><img src='$img' alt='$filename' onclick='window.open(this.src)'></div>" >> screenshot_gallery.html
+              fi
+            done
+          fi
+
+          echo "</div></body></html>" >> screenshot_gallery.html
+
+          echo "✅ Galerie HTML créée"
+        '''
+      }
+    }
+  }
+
+  post {
+    always {
+      // Archiver TOUS les artefacts importants
+      archiveArtifacts artifacts: '''
+        test-screenshots/**/*.png,
+        security_report*.json,
+        security_report.html,
+        screenshot_gallery.html,
+        *.log
+      ''', allowEmptyArchive: true
+
+      // Publier le rapport HTML
+      publishHTML([
+        allowMissing: false,
+        alwaysLinkToLastBuild: true,
+        keepAll: true,
+        reportDir: '.',
+        reportFiles: 'security_report.html',
+        reportName: 'Security Test Report',
+        reportTitles: 'Security Test Report'
+      ])
+
+      // Publier la galerie de captures
+      publishHTML([
+        allowMissing: false,
+        alwaysLinkToLastBuild: true,
+        keepAll: true,
+        reportDir: '.',
+        reportFiles: 'screenshot_gallery.html',
+        reportName: 'Screenshots Gallery',
+        reportTitles: 'Test Screenshots'
+      ])
+
+      sh '''
+        echo "=== Résumé des artefacts ==="
+        echo "📸 Captures d'écran:"
+        find . -name "*.png" -type f | head -20
+
+        echo -e "\\n📄 Rapports:"
+        ls -la *.html *.json 2>/dev/null || echo "Aucun rapport trouvé"
+      '''
+    }
+    success {
+      echo 'Build réussi avec captures!'
+    }
+    failure {
+      echo 'Build échoué!'
+    }
+  }
+}

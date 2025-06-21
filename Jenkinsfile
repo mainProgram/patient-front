@@ -313,6 +313,27 @@ EOF
         '''
       }
     }
+
+    stage('E2E Security Tests with Screenshots') {
+      steps {
+        sh '''
+          # Obtenir l'adresse IP du conteneur Jenkins
+          JENKINS_IP=$(hostname -i)
+
+          # Configurer l'URL pour les tests Selenium
+          export APP_URL="http://$JENKINS_IP:4201"
+
+          echo "=== Configuration des tests E2E ==="
+          echo "URL de test: $APP_URL"
+
+          # Créer un dossier pour les captures
+          mkdir -p test-screenshots
+
+          # Modifier le script pour sauvegarder dans le bon dossier
+          cat > tests/security_test_with_screenshots.py << 'EOF'
+        '''
+      }
+    }
   }
 
   post {
