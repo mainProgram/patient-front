@@ -334,30 +334,92 @@ EOF
         '''
       }
     }
-  }
+
+    stage('Generate Screenshot Gallery') {
+      steps {
+        sh '''
+          # Créer une galerie HTML pour visualiser toutes les captures
+          cat > screenshot_gallery.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>Galerie des Captures - Tests de Sécurité</title>
+              <style>
+                  body { font-family: Arial, sans-serif; margin: 20px; background: #f0f0f0; }
+                  h1 { text-align: center; color: #333; }
+                  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding: 20px; }
+                  .screenshot { background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                  .screenshot img { width: 100%; height: auto; border-radius: 4px; cursor: pointer; }
+                  .screenshot h3 { margin: 10px 0 5px 0; font-size: 14px; color: #555; }
+              </style>
+          </head>
+          <body>
+              <h1>📸 Galerie des Captures d'Écran</h1>
+              <div class="gallery">
+          EOF
+
+              # Ajouter chaque capture à la galerie
+              if [ -d test-screenshots ]; then
+                for img in test-screenshots/*.png; do
+                  if [ -f "$img" ]; then
+                    filename=$(basename "$img")
+                    echo "<div class='screenshot'><h3>$filename</h3><img src='$img' alt='$filename' onclick='window.open(this.src)'></div>" >> screenshot_gallery.html
+                  fi
+                done
+              fi
+
+              echo "</div></body></html>" >> screenshot_gallery.html
+
+              echo "✅ Galerie HTML créée"
+          '''
+        }
+      }
+    }
 
   post {
     always {
+      // Archiver TOUS les artefacts importants
+      archiveArtifacts artifacts: '''
+        test-screenshots/**/*.png,
+        security_report*.json,
+        security_report.html,
+        screenshot_gallery.html,
+        *.log
+      ''', allowEmptyArchive: true
+
+      // Publier le rapport HTML
+      publishHTML([
+        allowMissing: false,
+        alwaysLinkToLastBuild: true,
+        keepAll: true,
+        reportDir: '.',
+        reportFiles: 'security_report.html',
+        reportName: 'Security Test Report',
+        reportTitles: 'Security Test Report'
+      ])
+
+      // Publier la galerie de captures
+      publishHTML([
+        allowMissing: false,
+        alwaysLinkToLastBuild: true,
+        keepAll: true,
+        reportDir: '.',
+        reportFiles: 'screenshot_gallery.html',
+        reportName: 'Screenshots Gallery',
+        reportTitles: 'Test Screenshots'
+      ])
+
       sh '''
-        # Nettoyer les processus
-        pkill -f "http-server" || true
-        pkill -f "serve" || true
+        echo "=== Résumé des artefacts ==="
+        echo "📸 Captures d'écran:"
+        find . -name "*.png" -type f | head -20
 
-        # Archiver les logs et captures
-        if [ -f http-server.log ]; then
-          echo "=== Logs finaux du serveur ==="
-          tail -50 http-server.log
-        fi
-
-        # Supprimer les fichiers temporaires
-        rm -f *.pid
+        echo -e "\\n📄 Rapports:"
+        ls -la *.html *.json 2>/dev/null || echo "Aucun rapport trouvé"
       '''
-
-      // Archiver les artefacts utiles
-      archiveArtifacts artifacts: '*.png, *.log, security_report_*.json', allowEmptyArchive: true
     }
     success {
-      echo 'Build réussi!'
+      echo 'Build réussi avec captures!'
     }
     failure {
       echo 'Build échoué!'
