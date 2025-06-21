@@ -25,7 +25,7 @@ class AuthSecurityTests:
         """Créer le répertoire pour les captures d'écran"""
         if not os.path.exists(self.screenshots_dir):
             os.makedirs(self.screenshots_dir)
-            print(f"✅ Répertoire créé: {self.screenshots_dir}")
+            print(f"Répertoire créé: {self.screenshots_dir}")
 
     def take_screenshot(self, name, description=""):
         """Prendre une capture d'écran avec un nom descriptif"""
@@ -35,13 +35,13 @@ class AuthSecurityTests:
             filename = f"{self.screenshots_dir}/{self.screenshot_counter:02d}_{timestamp}_{name}.png"
 
             self.driver.save_screenshot(filename)
-            print(f"📸 Capture d'écran: {filename}")
+            print(f"Capture d'écran: {filename}")
             if description:
                 print(f"   Description: {description}")
 
             return filename
         except Exception as e:
-            print(f"❌ Erreur capture d'écran: {str(e)}")
+            print(f"Erreur capture d'écran: {str(e)}")
             return None
 
     def setup_driver(self):
@@ -86,20 +86,20 @@ class AuthSecurityTests:
             # Attendre que les champs de login soient présents
             try:
                 self.wait.until(EC.presence_of_element_located((By.NAME, "username")))
-                print("✅ Page de login chargée avec succès")
+                print("Page de login chargée avec succès")
 
                 # Capture de la page de login prête
                 self.take_screenshot("login_page_ready", "Page de login avec champs visibles")
                 return True
             except TimeoutException:
-                print("❌ Impossible de trouver les champs de login")
+                print("Impossible de trouver les champs de login")
                 # Capture en cas d'erreur
                 self.take_screenshot("login_page_error", "Erreur - champs de login non trouvés")
                 print(f"Page HTML actuelle: {self.driver.page_source[:500]}")
                 return False
 
         except Exception as e:
-            print(f"❌ Erreur lors de la navigation: {str(e)}")
+            print(f"Erreur lors de la navigation: {str(e)}")
             self.take_screenshot("navigation_error", f"Erreur navigation: {str(e)}")
             return False
 
@@ -112,7 +112,7 @@ class AuthSecurityTests:
             "screenshot": screenshot_path,
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         })
-        status = "✅ PASSÉ" if passed else "❌ ÉCHOUÉ"
+        status = "PASSÉ" if passed else "ÉCHOUÉ"
         print(f"{status} - {test_name}")
         if details:
             print(f"   Détails: {details}")
@@ -516,17 +516,17 @@ class AuthSecurityTests:
             print("\n--- Tests échoués ---")
             for test in self.test_results:
                 if not test['passed']:
-                    print(f"❌ {test['test']}")
+                    print(f"{test['test']}")
                     if test['details']:
                         print(f"   → {test['details']}")
                     if test.get('screenshot'):
-                        print(f"   📸 {test['screenshot']}")
+                        print(f"   {test['screenshot']}")
 
         # Lister toutes les captures d'écran
         print(f"\n--- Captures d'écran créées ({self.screenshot_counter} total) ---")
         for test in self.test_results:
             if test.get('screenshot'):
-                print(f"📸 {test['screenshot']} - {test['test']}")
+                print(f"{test['screenshot']} - {test['test']}")
 
         # Sauvegarder le rapport JSON
         report_file = f"security_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
@@ -603,13 +603,13 @@ if __name__ == "__main__":
     try:
         success = tests.run_tests()
         if success:
-            print("\n✅ Tests de sécurité terminés avec succès!")
+            print("\nTests de sécurité terminés avec succès!")
             exit(0)
         else:
-            print("\n⚠️ Certains tests ont échoué!")
+            print("\nCertains tests ont échoué!")
             exit(0)  # Exit 0 pour ne pas bloquer Jenkins
     except Exception as e:
-        print(f"\n❌ Erreur fatale: {str(e)}")
+        print(f"\nErreur fatale: {str(e)}")
         try:
             tests.take_screenshot("fatal_error", f"Erreur fatale: {str(e)}")
         except:
