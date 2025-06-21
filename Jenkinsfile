@@ -251,6 +251,9 @@ EOF
           echo "=== Configuration des tests E2E ==="
           echo "URL de test: $APP_URL"
 
+          # Créer le répertoire pour les captures d'écran si il n'existe pas
+          mkdir -p screenshots
+
           # Créer un script de test simple pour vérifier l'accès
           cat > tests/simple_test.py << 'EOF'
 import sys
@@ -297,18 +300,50 @@ except Exception as e:
     exit(1)
 EOF
 
-          # Exécuter le test simple
+          # Exécuter le script principal de tests de sécurité avec captures d'écran
+          echo "=== Exécution des tests de sécurité avec captures d'écran ==="
           python3 tests/script.py "$APP_URL" || {
-            echo "⚠️ Test simple échoué, vérification des alternatives..."
+            echo "⚠️ Tests de sécurité terminés avec des avertissements"
 
-            # Essayer avec localhost
-            python3 tests/script.py "http://localhost:4201" || true
+            # Vérifier si des captures ont été créées
+            if [ -d "screenshots" ] && [ "$(ls -A screenshots 2>/dev/null)" ]; then
+              echo "✅ Captures d'écran créées:"
+              ls -la screenshots/
+            else
+              echo "⚠️ Aucune capture d'écran trouvée"
+            fi
           }
 
-          # Si une capture d'écran existe, afficher ses propriétés
-          if [ -f page_screenshot.png ]; then
-            echo "=== Capture d'écran créée ==="
-            ls -la page_screenshot.png
+          # Afficher un résumé des captures d'écran créées
+          echo "=== Résumé des captures d'écran ==="
+          if [ -d "screenshots" ]; then
+            SCREENSHOT_COUNT=$(ls screenshots/*.png 2>/dev/null | wc -l || echo "0")
+            echo "📸 Nombre de captures d'écran: $SCREENSHOT_COUNT"
+
+            if [ "$SCREENSHOT_COUNT" -gt "0" ]; then
+              echo "📁 Fichiers créés:"
+              ls -la screenshots/*.png | head -10
+
+              # Afficher la taille totale
+              TOTAL_SIZE=$(du -sh screenshots/ 2>/dev/null | cut -f1 || echo "N/A")
+              echo "💾 Taille totale: $TOTAL_SIZE"
+            fi
+          else
+            echo "❌ Répertoire screenshots non trouvé"
+          fi
+
+          # Vérifier les rapports JSON
+          echo "=== Vérification des rapports ==="
+          if ls security_report_*.json 1> /dev/null 2>&1; then
+            echo "📊 Rapports JSON créés:"
+            ls -la security_report_*.json
+
+            # Afficher un aperçu du dernier rapport
+            LATEST_REPORT=$(ls -t security_report_*.json | head -1)
+            echo "📋 Aperçu du rapport $LATEST_REPORT:"
+            cat "$LATEST_REPORT" | head -20
+          else
+            echo "⚠️ Aucun rapport JSON trouvé"
           fi
         '''
       }
@@ -322,24 +357,113 @@ EOF
         pkill -f "http-server" || true
         pkill -f "serve" || true
 
-        # Archiver les logs et captures
+        # Afficher les logs finaux du serveur
         if [ -f http-server.log ]; then
           echo "=== Logs finaux du serveur ==="
           tail -50 http-server.log
+        fi
+
+        # Afficher les statistiques finales des captures d'écran
+        echo "=== Statistiques finales des captures ==="
+        if [ -d "screenshots" ]; then
+          SCREENSHOT_COUNT=$(ls screenshots/*.png 2>/dev/null | wc -l || echo "0")
+          echo "📸 Total des captures d'écran créées: $SCREENSHOT_COUNT"
+
+          if [ "$SCREENSHOT_COUNT" -gt "0" ]; then
+            echo "📁 Liste des captures:"
+            ls -la screenshots/*.png
+
+            # Créer un fichier index des captures
+            echo "Création d'un index des captures d'écran..." > screenshots_index.txt
+            echo "Date: $(date)" >> screenshots_index.txt
+            echo "Nombre total: $SCREENSHOT_COUNT" >> screenshots_index.txt
+            echo "" >> screenshots_index.txt
+            echo "Liste des fichiers:" >> screenshots_index.txt
+            ls -la screenshots/*.png >> screenshots_index.txt 2>/dev/null || echo "Aucune capture trouvée" >> screenshots_index.txt
+          fi
+        else
+          echo "❌ Aucun répertoire screenshots trouvé"
+        fi
+
+        # Afficher les rapports de sécurité disponibles
+        if ls security_report_*.json 1> /dev/null 2>&1; then
+          echo "=== Rapports de sécurité disponibles ==="
+          ls -la security_report_*.json
         fi
 
         # Supprimer les fichiers temporaires
         rm -f *.pid
       '''
 
-      // Archiver les artefacts utiles
-      archiveArtifacts artifacts: '*.png, *.log, security_report_*.json', allowEmptyArchive: true
+      // Archiver tous les artefacts utiles, y compris les captures d'écran
+      archiveArtifacts artifacts: '''
+        screenshots/*.png,
+        screenshots_index.txt,
+        security_report_*.json,
+        *.log,
+        page_screenshot.png,
+        fatal_error.png,
+        login_page_error.png
+      ''', allowEmptyArchive: true
+
+      // Publier les captures d'écran comme artefacts HTML si possible
+      script {
+        try {
+          // Créer une page HTML simple pour visualiser les captures
+          sh '''
+            if [ -d "screenshots" ] && [ "$(ls -A screenshots 2>/dev/null)" ]; then
+              cat > screenshots_gallery.html << 'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Galerie des captures d'écran - Tests de sécurité</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .screenshot { margin: 20px 0; border: 1px solid #ddd; padding: 10px; }
+        .screenshot img { max-width: 800px; border: 1px solid #ccc; }
+        .screenshot h3 { color: #333; margin: 0 0 10px 0; }
+        .info { background: #f5f5f5; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>📸 Galerie des captures d'écran - Tests de sécurité</h1>
+    <div class="info">
+        <strong>Date:</strong> $(date)<br>
+        <strong>Nombre de captures:</strong> $(ls screenshots/*.png 2>/dev/null | wc -l || echo "0")
+    </div>
+EOF
+
+              # Ajouter chaque capture à la galerie
+              for screenshot in screenshots/*.png; do
+                if [ -f "$screenshot" ]; then
+                  filename=$(basename "$screenshot")
+                  echo "    <div class='screenshot'>" >> screenshots_gallery.html
+                  echo "        <h3>$filename</h3>" >> screenshots_gallery.html
+                  echo "        <img src='$screenshot' alt='$filename'>" >> screenshots_gallery.html
+                  echo "        <p><strong>Fichier:</strong> $filename</p>" >> screenshots_gallery.html
+                  echo "    </div>" >> screenshots_gallery.html
+                fi
+              done
+
+              echo "</body></html>" >> screenshots_gallery.html
+              echo "✅ Galerie HTML créée: screenshots_gallery.html"
+            fi
+          '''
+        } catch (Exception e) {
+          echo "⚠️ Impossible de créer la galerie HTML: ${e.getMessage()}"
+        }
+      }
+
+      // Archiver aussi la galerie HTML
+      archiveArtifacts artifacts: 'screenshots_gallery.html', allowEmptyArchive: true
     }
+
     success {
-      echo 'Build réussi!'
+      echo '✅ Build réussi! Captures d\'écran archivées.'
     }
+
     failure {
-      echo 'Build échoué!'
+      echo '❌ Build échoué! Vérifiez les captures d\'écran pour le diagnostic.'
     }
   }
 }
