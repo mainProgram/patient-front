@@ -162,27 +162,20 @@ pipeline {
           echo "=== Démarrage des tests de sécurité ==="
           echo "URL de test: $APP_URL"
 
-          # Copier le nouveau script de test
-          cp tests/fixed_auth_security_test.py tests/security_test.py || true
-
-          # Exécuter le test de sécurité avec timeout
-          timeout 300 python3 tests/security_test.py "$APP_URL" || {
+          timeout 300 python3 tests/script.py "$APP_URL" || {
             echo "⚠️ Tests de sécurité terminés avec des échecs"
             # Ne pas faire échouer le build
             true
           }
 
-          # Afficher les rapports générés
           echo "=== Rapports générés ==="
           ls -la security_report_*.json || echo "Aucun rapport trouvé"
 
-          # Afficher le contenu du dernier rapport
           if [ -f security_report_*.json ]; then
             echo "=== Contenu du rapport ==="
             cat security_report_*.json | head -50
           fi
 
-          # Archiver les captures d'écran si elles existent
           if ls *.png 1> /dev/null 2>&1; then
             echo "=== Captures d'écran trouvées ==="
             ls -la *.png
