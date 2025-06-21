@@ -1,7 +1,6 @@
 import sys
 import time
 import json
-import os
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
@@ -16,13 +15,7 @@ class AuthSecurityTests:
         self.driver = None
         self.wait = None
         self.test_results = []
-        self.screenshots = []
-        self.screenshot_dir = "test-screenshots"
         self.setup_driver()
-
-        # Créer le dossier pour les captures
-        if not os.path.exists(self.screenshot_dir):
-            os.makedirs(self.screenshot_dir)
 
     def setup_driver(self):
         options = Options()
@@ -38,14 +31,6 @@ class AuthSecurityTests:
             options=options
         )
         self.wait = WebDriverWait(self.driver, 30)
-
-    def take_screenshot(self, name):
-        """Prendre une capture d'écran avec un nom descriptif"""
-        filename = f"{self.screenshot_dir}/{name}_{datetime.now().strftime('%H%M%S')}.png"
-        self.driver.save_screenshot(filename)
-        self.screenshots.append(filename)
-        print(f"📸 Capture d'écran sauvegardée: {filename}")
-        return filename
 
     def navigate_to_login(self):
         """Naviguer vers la page de login, gérer les redirections"""
@@ -73,7 +58,7 @@ class AuthSecurityTests:
             except TimeoutException:
                 print("❌ Impossible de trouver les champs de login")
                 # Prendre une capture d'écran pour debug
-                self.take_screenshot("login_page_error")
+                self.driver.save_screenshot("login_page_error.png")
                 print(f"Page HTML actuelle: {self.driver.page_source[:500]}")
                 return False
 
@@ -81,14 +66,13 @@ class AuthSecurityTests:
             print(f"❌ Erreur lors de la navigation: {str(e)}")
             return False
 
-    def log_test_result(self, test_name, passed, details="", screenshot=None):
+    def log_test_result(self, test_name, passed, details=""):
         """Enregistrer le résultat d'un test"""
         self.test_results.append({
             "test": test_name,
             "passed": passed,
             "details": details,
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "screenshot": screenshot
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         })
         status = "✅ PASSÉ" if passed else "❌ ÉCHOUÉ"
         print(f"{status} - {test_name}")
@@ -143,10 +127,8 @@ class AuthSecurityTests:
             password_input.send_keys("password")
 
             print("Tentative d'injection SQL...")
-            screenshot_before = self.take_screenshot("sql_injection_before")
             submit_button.click()
             time.sleep(3)
-            screenshot_after = self.take_screenshot("sql_injection_after")
 
             vulnerabilities = self.check_for_vulnerabilities()
 
@@ -154,26 +136,22 @@ class AuthSecurityTests:
                 self.log_test_result(
                     "Protection injection SQL basique",
                     False,
-                    f"Vulnérabilités détectées: {', '.join(vulnerabilities)}",
-                    screenshot_after
+                    f"Vulnérabilités détectées: {', '.join(vulnerabilities)}"
                 )
                 return False
             else:
                 self.log_test_result(
                     "Protection injection SQL basique",
                     True,
-                    "Injection SQL bloquée correctement",
-                    screenshot_after
+                    "Injection SQL bloquée correctement"
                 )
                 return True
 
         except Exception as e:
-            screenshot = self.take_screenshot("sql_injection_error")
             self.log_test_result(
                 "Test injection SQL basique",
                 False,
-                f"Erreur: {str(e)}",
-                screenshot
+                f"Erreur: {str(e)}"
             )
             return False
 
@@ -197,10 +175,8 @@ class AuthSecurityTests:
             password_input.send_keys("password123")
 
             print("Tentative de connexion valide...")
-            screenshot_before = self.take_screenshot("valid_login_before")
             submit_button.click()
             time.sleep(5)
-            screenshot_after = self.take_screenshot("valid_login_after")
 
             # Vérifier si on est bien connecté
             current_url = self.driver.current_url
@@ -210,8 +186,7 @@ class AuthSecurityTests:
                 self.log_test_result(
                     "Connexion valide",
                     True,
-                    "Connexion réussie avec les bonnes credentials",
-                    screenshot_after
+                    "Connexion réussie avec les bonnes credentials"
                 )
 
                 # Se déconnecter pour les prochains tests
@@ -227,18 +202,15 @@ class AuthSecurityTests:
                 self.log_test_result(
                     "Connexion valide",
                     False,
-                    "Impossible de se connecter avec des credentials valides",
-                    screenshot_after
+                    "Impossible de se connecter avec des credentials valides"
                 )
                 return False
 
         except Exception as e:
-            screenshot = self.take_screenshot("valid_login_error")
             self.log_test_result(
                 "Test connexion valide",
                 False,
-                f"Erreur: {str(e)}",
-                screenshot
+                f"Erreur: {str(e)}"
             )
             return False
 
@@ -271,11 +243,8 @@ class AuthSecurityTests:
                 password_input.clear()
                 password_input.send_keys(password)
 
-                screenshot_name = f'sql_variation_{username[:20].replace(" ", "_").replace("'", "")}'
-                screenshot_before = self.take_screenshot(f"{screenshot_name}_before")
                 submit_button.click()
                 time.sleep(3)
-                screenshot_after = self.take_screenshot(f"{screenshot_name}_after")
 
                 vulnerabilities = self.check_for_vulnerabilities()
 
@@ -283,25 +252,21 @@ class AuthSecurityTests:
                     self.log_test_result(
                         f"Protection SQL - {username[:20]}",
                         False,
-                        f"Vulnérabilités: {', '.join(vulnerabilities)}",
-                        screenshot_after
+                        f"Vulnérabilités: {', '.join(vulnerabilities)}"
                     )
                     all_passed = False
                 else:
                     self.log_test_result(
                         f"Protection SQL - {username[:20]}",
                         True,
-                        "Injection bloquée",
-                        screenshot_after
+                        "Injection bloquée"
                     )
 
             except Exception as e:
-                screenshot = self.take_screenshot(f"sql_variation_error")
                 self.log_test_result(
                     f"Test SQL - {username[:20]}",
                     False,
-                    f"Erreur: {str(e)}",
-                    screenshot
+                    f"Erreur: {str(e)}"
                 )
                 all_passed = False
 
@@ -326,7 +291,6 @@ class AuthSecurityTests:
             password_input.clear()
             password_input.send_keys("password")
 
-            screenshot_before = self.take_screenshot("xss_test_before")
             submit_button.click()
             time.sleep(2)
 
@@ -334,43 +298,36 @@ class AuthSecurityTests:
             try:
                 alert = self.driver.switch_to.alert
                 alert_text = alert.text
-                screenshot_alert = self.take_screenshot("xss_alert_detected")
                 alert.accept()
                 self.log_test_result(
                     "Protection XSS basique",
                     False,
-                    f"Alerte XSS déclenchée: {alert_text}",
-                    screenshot_alert
+                    f"Alerte XSS déclenchée: {alert_text}"
                 )
                 return False
             except:
                 # Pas d'alerte, vérifier le DOM
                 page_source = self.driver.page_source
-                screenshot_after = self.take_screenshot("xss_test_after")
                 if "<script>" in page_source and "alert" in page_source:
                     self.log_test_result(
                         "Protection XSS basique",
                         False,
-                        "Script injecté dans le DOM",
-                        screenshot_after
+                        "Script injecté dans le DOM"
                     )
                     return False
                 else:
                     self.log_test_result(
                         "Protection XSS basique",
                         True,
-                        "XSS bloqué correctement",
-                        screenshot_after
+                        "XSS bloqué correctement"
                     )
                     return True
 
         except Exception as e:
-            screenshot = self.take_screenshot("xss_test_error")
             self.log_test_result(
                 "Test XSS basique",
                 False,
-                f"Erreur: {str(e)}",
-                screenshot
+                f"Erreur: {str(e)}"
             )
             return False
 
@@ -403,11 +360,8 @@ class AuthSecurityTests:
                 password_input.clear()
                 password_input.send_keys(password)
 
-                bypass_name = username.strip().replace(" ", "_").replace("\x00", "null")
-                screenshot_before = self.take_screenshot(f"bypass_{bypass_name}_before")
                 submit_button.click()
                 time.sleep(3)
-                screenshot_after = self.take_screenshot(f"bypass_{bypass_name}_after")
 
                 vulnerabilities = self.check_for_vulnerabilities()
 
@@ -415,29 +369,63 @@ class AuthSecurityTests:
                     self.log_test_result(
                         f"Protection bypass - {username.strip()}",
                         False,
-                        f"Vulnérabilités: {', '.join(vulnerabilities)}",
-                        screenshot_after
+                        f"Vulnérabilités: {', '.join(vulnerabilities)}"
                     )
                     all_passed = False
                 else:
                     self.log_test_result(
                         f"Protection bypass - {username.strip()}",
                         True,
-                        "Tentative bloquée",
-                        screenshot_after
+                        "Tentative bloquée"
                     )
 
             except Exception as e:
-                screenshot = self.take_screenshot("bypass_error")
                 self.log_test_result(
                     f"Test bypass - {username.strip()}",
                     False,
-                    f"Erreur: {str(e)}",
-                    screenshot
+                    f"Erreur: {str(e)}"
                 )
                 all_passed = False
 
         return all_passed
+
+    def generate_simple_report(self):
+        """Générer un rapport simple"""
+        print("\n" + "="*60)
+        print("RAPPORT DES TESTS DE SÉCURITÉ")
+        print("="*60)
+        print(f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"URL: {self.app_url}")
+
+        passed = sum(1 for t in self.test_results if t['passed'])
+        failed = len(self.test_results) - passed
+
+        print(f"\nRésultats: {passed} réussis, {failed} échoués")
+        print(f"Taux de réussite: {(passed/len(self.test_results)*100):.1f}%")
+
+        if failed > 0:
+            print("\n--- Tests échoués ---")
+            for test in self.test_results:
+                if not test['passed']:
+                    print(f"❌ {test['test']}")
+                    if test['details']:
+                        print(f"   → {test['details']}")
+
+        # Sauvegarder le rapport JSON
+        report_file = f"security_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        with open(report_file, 'w') as f:
+            json.dump({
+                "date": datetime.now().isoformat(),
+                "url": self.app_url,
+                "summary": {
+                    "total": len(self.test_results),
+                    "passed": passed,
+                    "failed": failed
+                },
+                "results": self.test_results
+            }, f, indent=2)
+
+        print(f"\nRapport sauvegardé: {report_file}")
 
     def run_tests(self):
         """Exécuter les tests principaux"""
@@ -454,10 +442,8 @@ class AuthSecurityTests:
         self.test_xss_basic()
         self.test_authentication_bypass()
 
-        # Lister toutes les captures créées
-        print("\n📸 Captures d'écran créées:")
-        for screenshot in self.screenshots:
-            print(f"  - {screenshot}")
+        # Générer le rapport
+        self.generate_simple_report()
 
         # Retourner le succès global
         failed = sum(1 for t in self.test_results if not t['passed'])
