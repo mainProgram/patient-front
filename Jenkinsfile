@@ -129,17 +129,64 @@ pipeline {
       }
     }
 
-    stage('E2E Test') {
+    stage('Debug Angular App') {
       steps {
         sh '''
+          JENKINS_IP=$(hostname -i)
+
+          echo "=== Test de l'application Angular ==="
+
+          # Test de la page d'accueil
+          echo "Test URL: http://$JENKINS_IP:4201/"
+          curl -s "http://$JENKINS_IP:4201/" | head -20
+
+          # Test de la page de login
+          echo "Test URL: http://$JENKINS_IP:4201/login"
+          curl -s "http://$JENKINS_IP:4201/login" | head -20
+
+          # Vérifier les processus
+          ps aux | grep http-server || echo "http-server non trouvé"
+        '''
+      }
+    }
+
+    stage('E2E Test') {
+      steps {
+         sh '''
           # Obtenir l'adresse IP du conteneur Jenkins
           JENKINS_IP=$(hostname -i)
 
           # Configurer l'URL pour les tests Selenium
           export APP_URL="http://$JENKINS_IP:4201"
 
-          # Exécuter le test auth
-          python3 tests/script.py "$APP_URL" || true
+          echo "=== Démarrage des tests de sécurité ==="
+          echo "URL de test: $APP_URL"
+
+          # Copier le nouveau script de test
+          cp tests/fixed_auth_security_test.py tests/security_test.py || true
+
+          # Exécuter le test de sécurité avec timeout
+          timeout 300 python3 tests/security_test.py "$APP_URL" || {
+            echo "⚠️ Tests de sécurité terminés avec des échecs"
+            # Ne pas faire échouer le build
+            true
+          }
+
+          # Afficher les rapports générés
+          echo "=== Rapports générés ==="
+          ls -la security_report_*.json || echo "Aucun rapport trouvé"
+
+          # Afficher le contenu du dernier rapport
+          if [ -f security_report_*.json ]; then
+            echo "=== Contenu du rapport ==="
+            cat security_report_*.json | head -50
+          fi
+
+          # Archiver les captures d'écran si elles existent
+          if ls *.png 1> /dev/null 2>&1; then
+            echo "=== Captures d'écran trouvées ==="
+            ls -la *.png
+          fi
         '''
       }
     }
